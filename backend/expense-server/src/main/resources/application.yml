@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ai-expense-tracker
+  profiles:
+    active: dev
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+
+jwt:
+  secret: YWktZXhwZW5zZS10cmFja2VyLXNlY3JldC1rZXktMjAyNi1tdXN0LWJlLWxvbmctZW5vdWdo
+  expiration: 604800000  # 7 days in ms
