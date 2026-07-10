@@ -8,9 +8,9 @@ spring:
     active: dev
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:47.111.104.180}:${DB_PORT:3306}/${DB_NAME:ai_expense_tracker}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: ${DB_USERNAME:ai-expense-tracker}
-    password: ${DB_PASSWORD:xfylovesxy}
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME:ai_expense_tracker}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   flyway:
@@ -27,5 +27,5 @@ mybatis-plus:
       id-type: auto
 
 jwt:
-  secret: ${JWT_SECRET:YWktZXhwZW5zZS10cmFja2VyLXNlY3JldC1rZXktMjAyNi1tdXN0LWJlLWxvbmctZW5vdWdo}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:604800000}  # 7 days in ms
