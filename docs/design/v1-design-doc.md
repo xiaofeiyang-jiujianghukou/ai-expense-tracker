@@ -350,6 +350,8 @@ CREATE TABLE `user` (
 | 字符集 | 统一 `utf8mb4` + `utf8mb4_unicode_ci` |
 | 引擎 | 统一 `InnoDB` |
 | 主键 | `BIGINT NOT NULL AUTO_INCREMENT`，不允许使用业务主键 |
+| 时间戳 | `created_time` 用 `DEFAULT CURRENT_TIMESTAMP`，`updated_time` 用 `ON UPDATE CURRENT_TIMESTAMP`，代码不注入时间 |
+| 回查 | insert/update 后 `selectById` 获取 DB 填充的默认值（MyBatis-Plus 只回填主键，不回填其他默认值） |
 
 ### 4.9 配置管理规范
 
