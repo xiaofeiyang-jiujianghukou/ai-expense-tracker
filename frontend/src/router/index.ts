@@ -7,53 +7,53 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/login/LoginView.vue'),
-      meta: { requiresAuth: false }
+      component: () => import('../views/login/LoginView.vue')
     },
     {
       path: '/register',
       name: 'register',
-      component: () => import('../views/register/RegisterView.vue'),
-      meta: { requiresAuth: false }
+      component: () => import('../views/register/RegisterView.vue')
     },
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: () => import('../views/dashboard/DashboardView.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('../views/dashboard/DashboardView.vue')
     },
     {
       path: '/bills',
       name: 'bills',
-      component: () => import('../views/bills/BillList.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('../views/bills/BillList.vue')
     },
     {
       path: '/categories',
       name: 'categories',
-      component: () => import('../views/categories/CategoryManage.vue'),
-      meta: { requiresAuth: true }
+      component: () => import('../views/categories/CategoryManage.vue')
     },
     {
       path: '/statistics',
       name: 'statistics',
-      component: () => import('../views/statistics/MonthlyStats.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/dashboard'
+      component: () => import('../views/statistics/MonthlyStats.vue')
     }
   ]
 })
 
+const publicPaths = ['/login', '/register']
+
 router.beforeEach((to, _from, next) => {
-  if (to.meta.requiresAuth && !isLoggedIn()) {
-    next('/login')
-  } else if (!to.meta.requiresAuth && isLoggedIn() && (to.path === '/login' || to.path === '/register')) {
-    next('/dashboard')
+  if (isLoggedIn()) {
+    // 已登录：访问登录/注册页 → 跳转仪表盘
+    if (publicPaths.includes(to.path)) {
+      next('/dashboard')
+    } else {
+      next()
+    }
   } else {
-    next()
+    // 未登录：允许访问登录/注册页，其他一律跳转登录
+    if (publicPaths.includes(to.path)) {
+      next()
+    } else {
+      next('/login')
+    }
   }
 })
 
