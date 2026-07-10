@@ -3,6 +3,7 @@ package com.example.expense.transaction.manager;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.expense.category.entity.Category;
 import com.example.expense.category.service.CategoryService;
+import com.example.expense.common.exception.BusinessException;
 import com.example.expense.transaction.dto.TransactionRequest;
 import com.example.expense.transaction.dto.TransactionVO;
 import com.example.expense.transaction.entity.Transaction;
@@ -18,6 +19,16 @@ import java.util.stream.Collectors;
 @Component("transactionBizManager")
 @RequiredArgsConstructor
 public class TransactionManager {
+
+    private static final String UNKNOWN_CATEGORY = "未知";
+
+    private String getCategoryName(Long categoryId) {
+        try {
+            return categoryService.findById(categoryId).getName();
+        } catch (BusinessException e) {
+            return UNKNOWN_CATEGORY;
+        }
+    }
 
     private final TransactionService transactionService;
     private final CategoryService categoryService;
@@ -36,8 +47,7 @@ public class TransactionManager {
         Map<Long, String> categoryNames = txnPage.getRecords().stream()
                 .map(Transaction::getCategoryId)
                 .distinct()
-                .map(categoryService::findById)
-                .collect(Collectors.toMap(Category::getId, Category::getName));
+                .collect(Collectors.toMap(cid -> cid, this::getCategoryName));
 
         Page<TransactionVO> voPage = new Page<>(page, size, txnPage.getTotal());
         voPage.setRecords(txnPage.getRecords().stream()
@@ -48,8 +58,7 @@ public class TransactionManager {
 
     public TransactionVO getById(Long id, Long userId) {
         Transaction txn = transactionService.findById(id, userId);
-        Category category = categoryService.findById(txn.getCategoryId());
-        return toVO(txn, category.getName());
+        return toVO(txn, getCategoryName(txn.getCategoryId()));
     }
 
     @Transactional
