@@ -21,10 +21,11 @@ public class TransactionController {
     private final TransactionManager transactionManager;
 
     @PostMapping
-    public ApiResponse<TransactionVO> create(@Valid @RequestBody TransactionRequest request,
-                                             Authentication auth) {
+    public ApiResponse<Void> create(@Valid @RequestBody TransactionRequest request,
+                                     Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
-        return ApiResponse.success(transactionManager.create(request, userId));
+        transactionManager.create(request, userId);
+        return ApiResponse.success();
     }
 
     @GetMapping
@@ -48,11 +49,12 @@ public class TransactionController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<TransactionVO> update(@PathVariable Long id,
-                                             @Valid @RequestBody TransactionRequest request,
-                                             Authentication auth) {
+    public ApiResponse<Void> update(@PathVariable Long id,
+                                     @Valid @RequestBody TransactionRequest request,
+                                     Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
-        return ApiResponse.success(transactionManager.update(id, request, userId));
+        transactionManager.update(id, request, userId);
+        return ApiResponse.success();
     }
 
     @DeleteMapping("/{id}")

@@ -19,10 +19,11 @@ public class CategoryController {
     private final CategoryManager categoryManager;
 
     @PostMapping
-    public ApiResponse<CategoryVO> create(@Valid @RequestBody CategoryRequest request,
-                                          Authentication auth) {
+    public ApiResponse<Void> create(@Valid @RequestBody CategoryRequest request,
+                                     Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
-        return ApiResponse.success(categoryManager.create(request, userId));
+        categoryManager.create(request, userId);
+        return ApiResponse.success();
     }
 
     @GetMapping
@@ -33,11 +34,12 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<CategoryVO> update(@PathVariable Long id,
-                                          @Valid @RequestBody CategoryRequest request,
-                                          Authentication auth) {
+    public ApiResponse<Void> update(@PathVariable Long id,
+                                     @Valid @RequestBody CategoryRequest request,
+                                     Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
-        return ApiResponse.success(categoryManager.update(id, request, userId));
+        categoryManager.update(id, request, userId);
+        return ApiResponse.success();
     }
 
     @DeleteMapping("/{id}")

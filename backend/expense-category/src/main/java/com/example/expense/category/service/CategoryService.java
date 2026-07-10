@@ -23,13 +23,12 @@ public class CategoryService {
 
     private final CategoryMapper categoryMapper;
 
-    public Category create(CategoryRequest request, Long userId) {
+    public void create(CategoryRequest request, Long userId) {
         Category category = new Category();
         category.setUserId(userId);
         category.setName(request.getName());
         category.setType(request.getType());
         categoryMapper.insert(category);
-        return category;
     }
 
     public List<Category> listByUser(Long userId, String type) {
@@ -42,7 +41,7 @@ public class CategoryService {
         return categoryMapper.selectList(wrapper);
     }
 
-    public Category update(Long id, CategoryRequest request, Long userId) {
+    public void update(Long id, CategoryRequest request, Long userId) {
         Category category = findById(id);
         if (!category.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
@@ -50,7 +49,6 @@ public class CategoryService {
         category.setName(request.getName());
         category.setType(request.getType());
         categoryMapper.updateById(category);
-        return category;
     }
 
     public void delete(Long id, Long userId) {

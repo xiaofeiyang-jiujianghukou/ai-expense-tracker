@@ -23,10 +23,8 @@ public class TransactionManager {
     private final CategoryService categoryService;
 
     @Transactional
-    public TransactionVO create(TransactionRequest request, Long userId) {
-        Transaction txn = transactionService.create(request, userId);
-        Category category = categoryService.findById(txn.getCategoryId());
-        return toVO(txn, category.getName());
+    public void create(TransactionRequest request, Long userId) {
+        transactionService.create(request, userId);
     }
 
     public Page<TransactionVO> page(Long userId, String type, Long categoryId,
@@ -35,7 +33,6 @@ public class TransactionManager {
         Page<Transaction> txnPage = transactionService.page(userId, type, categoryId,
                 startDate, endDate, page, size);
 
-        // Batch load category names
         Map<Long, String> categoryNames = txnPage.getRecords().stream()
                 .map(Transaction::getCategoryId)
                 .distinct()
@@ -56,10 +53,8 @@ public class TransactionManager {
     }
 
     @Transactional
-    public TransactionVO update(Long id, TransactionRequest request, Long userId) {
-        Transaction txn = transactionService.update(id, request, userId);
-        Category category = categoryService.findById(txn.getCategoryId());
-        return toVO(txn, category.getName());
+    public void update(Long id, TransactionRequest request, Long userId) {
+        transactionService.update(id, request, userId);
     }
 
     @Transactional

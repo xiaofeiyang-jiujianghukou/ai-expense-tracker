@@ -191,6 +191,12 @@
                   
   Service 和 Manager 默认是具体类，不需要 interface + impl。
   只有当需要多态（策略模式、多实现）时才提取接口。
+
+  写操作返回值：
+  - insert / update / delete 返回 void，Controller 返回 ApiResponse<Void>
+  - 调用方只需知道成功（code=200）或失败（异常），不需要返回对象
+  - 特例：注册/登录等需返回 ID/Token 的可返回数据
+  - 特例：乐观锁场景需判断 affected rows 时可返回 int
 ```
 
 ### 3.4 多模块依赖设计
@@ -407,6 +413,7 @@ jwt:
 | 没有空状态/加载态 | 白屏用户以为坏了 | Loading + Empty 组件 |
 | 建表不加 COMMENT | 无人知道表/字段含义 | 表注释 + 字段注释，强制规范 |
 | 敏感信息硬编码 | 泄露风险、环境切换困难 | DB 密码等走环境变量，无默认值 |
+| 写操作返回对象 | 浪费序列化开销、调用方不需要 | insert/update/delete 返回 ApiResponse\<Void\> |
 
 ---
 

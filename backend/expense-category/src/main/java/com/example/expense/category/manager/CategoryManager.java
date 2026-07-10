@@ -15,9 +15,8 @@ public class CategoryManager {
 
     private final CategoryService categoryService;
 
-    public CategoryVO create(CategoryRequest request, Long userId) {
-        Category category = categoryService.create(request, userId);
-        return toVO(category);
+    public void create(CategoryRequest request, Long userId) {
+        categoryService.create(request, userId);
     }
 
     public List<CategoryVO> list(Long userId, String type) {
@@ -26,9 +25,8 @@ public class CategoryManager {
                 .toList();
     }
 
-    public CategoryVO update(Long id, CategoryRequest request, Long userId) {
-        Category category = categoryService.update(id, request, userId);
-        return toVO(category);
+    public void update(Long id, CategoryRequest request, Long userId) {
+        categoryService.update(id, request, userId);
     }
 
     public void delete(Long id, Long userId) {

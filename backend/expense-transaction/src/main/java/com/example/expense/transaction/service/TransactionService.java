@@ -18,7 +18,7 @@ public class TransactionService {
 
     private final TransactionMapper transactionMapper;
 
-    public Transaction create(TransactionRequest request, Long userId) {
+    public void create(TransactionRequest request, Long userId) {
         Transaction txn = new Transaction();
         txn.setUserId(userId);
         txn.setCategoryId(request.getCategoryId());
@@ -27,7 +27,6 @@ public class TransactionService {
         txn.setDescription(request.getDescription());
         txn.setTransactionDate(request.getTransactionDate());
         transactionMapper.insert(txn);
-        return txn;
     }
 
     public Page<Transaction> page(Long userId, String type, Long categoryId,
@@ -65,7 +64,7 @@ public class TransactionService {
         return txn;
     }
 
-    public Transaction update(Long id, TransactionRequest request, Long userId) {
+    public void update(Long id, TransactionRequest request, Long userId) {
         Transaction txn = findById(id, userId);
         txn.setCategoryId(request.getCategoryId());
         txn.setAmount(request.getAmount());
@@ -73,11 +72,10 @@ public class TransactionService {
         txn.setDescription(request.getDescription());
         txn.setTransactionDate(request.getTransactionDate());
         transactionMapper.updateById(txn);
-        return txn;
     }
 
     public void delete(Long id, Long userId) {
-        findById(id, userId);  // verify ownership
+        findById(id, userId);
         transactionMapper.deleteById(id);
     }
 }
