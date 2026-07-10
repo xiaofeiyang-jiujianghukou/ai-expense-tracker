@@ -31,7 +31,7 @@ public class UserService {
         user.setStatus(1);
 
         userMapper.insert(user);
-        return userMapper.selectById(user.getId());
+        return user;
     }
 
     public User findByEmail(String email) {

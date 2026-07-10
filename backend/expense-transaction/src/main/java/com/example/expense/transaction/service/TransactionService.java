@@ -27,7 +27,7 @@ public class TransactionService {
         txn.setDescription(request.getDescription());
         txn.setTransactionDate(request.getTransactionDate());
         transactionMapper.insert(txn);
-        return transactionMapper.selectById(txn.getId());
+        return txn;
     }
 
     public Page<Transaction> page(Long userId, String type, Long categoryId,
@@ -73,7 +73,7 @@ public class TransactionService {
         txn.setDescription(request.getDescription());
         txn.setTransactionDate(request.getTransactionDate());
         transactionMapper.updateById(txn);
-        return transactionMapper.selectById(txn.getId());
+        return txn;
     }
 
     public void delete(Long id, Long userId) {

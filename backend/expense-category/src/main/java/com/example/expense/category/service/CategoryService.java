@@ -29,7 +29,7 @@ public class CategoryService {
         category.setName(request.getName());
         category.setType(request.getType());
         categoryMapper.insert(category);
-        return categoryMapper.selectById(category.getId());
+        return category;
     }
 
     public List<Category> listByUser(Long userId, String type) {
