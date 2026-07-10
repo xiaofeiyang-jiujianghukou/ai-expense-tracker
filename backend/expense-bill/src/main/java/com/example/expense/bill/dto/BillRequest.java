@@ -1,4 +1,4 @@
-package com.example.expense.transaction.dto;
+package com.example.expense.bill.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-public class TransactionRequest {
+public class BillRequest {
 
     @NotNull(message = "分类不能为空")
     private Long categoryId;

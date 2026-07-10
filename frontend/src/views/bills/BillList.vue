@@ -72,13 +72,13 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppLayout from '../../components/AppLayout.vue'
-import { listTransactions, createTransaction, updateTransaction, deleteTransaction, type TransactionVO } from '../../api/transaction'
+import { listBills, createBill, updateBill, deleteBill, type BillVO } from '../../api/bill'
 import { listCategories, type CategoryVO } from '../../api/category'
 
 const loading = ref(false)
 const saving = ref(false)
 const dialogVisible = ref(false)
-const list = ref<TransactionVO[]>([])
+const list = ref<BillVO[]>([])
 const total = ref(0)
 const categories = ref<CategoryVO[]>([])
 const editingId = ref<number | null>(null)
@@ -104,7 +104,7 @@ onMounted(async () => {
 async function fetchList() {
   loading.value = true
   try {
-    const res = await listTransactions({
+    const res = await listBills({
       type: filters.type || undefined,
       categoryId: filters.categoryId ?? undefined,
       startDate: filters.dateRange?.[0],
@@ -117,7 +117,7 @@ async function fetchList() {
   } finally { loading.value = false }
 }
 
-function openDialog(row?: TransactionVO) {
+function openDialog(row?: BillVO) {
   editingId.value = row?.id ?? null
   if (row) {
     form.type = row.type; form.categoryId = row.categoryId; form.amount = row.amount
@@ -136,10 +136,10 @@ async function handleSave() {
   try {
     const data = { ...form, categoryId: form.categoryId! }
     if (editingId.value) {
-      await updateTransaction({ id: editingId.value, ...data })
+      await updateBill({ id: editingId.value, ...data })
       ElMessage.success('修改成功')
     } else {
-      await createTransaction(data)
+      await createBill(data)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -149,7 +149,7 @@ async function handleSave() {
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除？', '确认', { type: 'warning' })
-  await deleteTransaction(id)
+  await deleteBill(id)
   ElMessage.success('删除成功')
   fetchList()
 }

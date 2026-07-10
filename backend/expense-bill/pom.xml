@@ -10,7 +10,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>expense-transaction</artifactId>
+    <artifactId>expense-bill</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>

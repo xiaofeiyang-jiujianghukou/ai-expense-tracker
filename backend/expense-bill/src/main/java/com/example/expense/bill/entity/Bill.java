@@ -1,4 +1,4 @@
-package com.example.expense.transaction.entity;
+package com.example.expense.bill.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("transaction")
-public class Transaction {
+public class Bill {
 
     @TableId(type = IdType.AUTO)
     private Long id;

@@ -19,7 +19,7 @@ public enum ErrorCode {
     // 404 - Not Found
     USER_NOT_FOUND(40401, "用户不存在"),
     CATEGORY_NOT_FOUND(40402, "分类不存在"),
-    TRANSACTION_NOT_FOUND(40403, "账单不存在"),
+    BILL_NOT_FOUND(40403, "账单不存在"),
 
     // 500 - Internal Server Error
     INTERNAL_ERROR(50001, "服务器内部错误");

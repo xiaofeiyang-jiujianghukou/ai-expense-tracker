@@ -23,9 +23,9 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/transactions',
-      name: 'transactions',
-      component: () => import('../views/transactions/TransactionList.vue'),
+      path: '/bills',
+      name: 'bills',
+      component: () => import('../views/bills/BillList.vue'),
       meta: { requiresAuth: true }
     },
     {

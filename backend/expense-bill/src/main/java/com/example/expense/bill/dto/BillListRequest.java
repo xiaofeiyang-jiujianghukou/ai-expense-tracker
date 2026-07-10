@@ -1,4 +1,4 @@
-package com.example.expense.transaction.dto;
+package com.example.expense.bill.dto;
 
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -6,7 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 
 @Data
-public class TransactionListRequest {
+public class BillListRequest {
     private String type;
     private Long categoryId;
 

@@ -1,4 +1,4 @@
-package com.example.expense.transaction.dto;
+package com.example.expense.bill.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class TransactionVO {
+public class BillVO {
     private Long id;
     private Long categoryId;
     private String categoryName;

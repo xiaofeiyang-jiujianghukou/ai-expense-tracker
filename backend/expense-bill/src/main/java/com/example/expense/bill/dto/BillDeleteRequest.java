@@ -1,10 +1,10 @@
-package com.example.expense.transaction.dto;
+package com.example.expense.bill.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class TransactionDeleteRequest {
+public class BillDeleteRequest {
 
     @NotNull(message = "ID不能为空")
     private Long id;

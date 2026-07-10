@@ -33,7 +33,7 @@
         </dependency>
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>expense-transaction</artifactId>
+            <artifactId>expense-bill</artifactId>
         </dependency>
         <dependency>
             <groupId>com.example</groupId>

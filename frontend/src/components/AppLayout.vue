@@ -12,7 +12,7 @@
         <el-menu-item index="/dashboard">
           <span>仪表盘</span>
         </el-menu-item>
-        <el-menu-item index="/transactions">
+        <el-menu-item index="/bills">
           <span>账单管理</span>
         </el-menu-item>
         <el-menu-item index="/categories">

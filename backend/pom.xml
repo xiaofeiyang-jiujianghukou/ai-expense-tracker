@@ -23,7 +23,7 @@
         <module>expense-security</module>
         <module>expense-user</module>
         <module>expense-category</module>
-        <module>expense-transaction</module>
+        <module>expense-bill</module>
         <module>expense-statistics</module>
         <module>expense-server</module>
     </modules>
@@ -123,7 +123,7 @@
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>expense-transaction</artifactId>
+                <artifactId>expense-bill</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

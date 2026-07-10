@@ -1,8 +1,8 @@
 package com.example.expense.statistics.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.expense.transaction.entity.Transaction;
-import com.example.expense.transaction.mapper.TransactionMapper;
+import com.example.expense.bill.entity.Bill;
+import com.example.expense.bill.mapper.BillMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,20 +16,20 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StatisticsService {
 
-    private final TransactionMapper transactionMapper;
+    private final BillMapper billMapper;
 
     public BigDecimal sumByType(Long userId, int year, int month, String type) {
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.plusMonths(1).minusDays(1);
 
-        List<Transaction> txns = transactionMapper.selectList(
-                new LambdaQueryWrapper<Transaction>()
-                        .eq(Transaction::getUserId, userId)
-                        .eq(Transaction::getType, type)
-                        .between(Transaction::getTransactionDate, start, end));
+        List<Bill> bills = billMapper.selectList(
+                new LambdaQueryWrapper<Bill>()
+                        .eq(Bill::getUserId, userId)
+                        .eq(Bill::getType, type)
+                        .between(Bill::getTransactionDate, start, end));
 
-        return txns.stream()
-                .map(Transaction::getAmount)
+        return bills.stream()
+                .map(Bill::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -37,15 +37,15 @@ public class StatisticsService {
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.plusMonths(1).minusDays(1);
 
-        List<Transaction> txns = transactionMapper.selectList(
-                new LambdaQueryWrapper<Transaction>()
-                        .eq(Transaction::getUserId, userId)
-                        .eq(Transaction::getType, type)
-                        .between(Transaction::getTransactionDate, start, end));
+        List<Bill> bills = billMapper.selectList(
+                new LambdaQueryWrapper<Bill>()
+                        .eq(Bill::getUserId, userId)
+                        .eq(Bill::getType, type)
+                        .between(Bill::getTransactionDate, start, end));
 
-        return txns.stream()
+        return bills.stream()
                 .collect(Collectors.groupingBy(
-                        Transaction::getCategoryId,
-                        Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)));
+                        Bill::getCategoryId,
+                        Collectors.reducing(BigDecimal.ZERO, Bill::getAmount, BigDecimal::add)));
     }
 }
