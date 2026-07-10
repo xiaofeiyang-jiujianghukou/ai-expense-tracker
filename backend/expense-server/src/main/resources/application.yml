@@ -28,4 +28,4 @@ mybatis-plus:
 
 jwt:
   secret: YWktZXhwZW5zZS10cmFja2VyLWp3dC1kZWM2MjMyZC0wNjczLTRkYTMtODNlZS1lODgzN2NiNTJkY2Q=
-  expiration: ${JWT_EXPIRATION:604800000}  # 7 days in ms
+  expiration: 604800000  # 7 days in ms
