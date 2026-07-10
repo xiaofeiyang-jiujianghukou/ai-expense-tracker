@@ -122,19 +122,22 @@ ai-expense-tracker/
 ### 5.1 后端分层职责
 
 ```
-Controller  →  Manager  →  Service  →  Mapper  →  DB
-   │              │           │
-   DTO         编排/聚合   原子业务
+单 Service：   Controller → Service → Mapper → DB
+多 Service：   Controller → Manager → Service → Mapper → DB
 ```
+
+**Manager 不是必须的层。** 只有编排 2+ 个 Service 时才创建 Manager；单 Service 调用时 Controller 直调 Service。禁止写只做透传的 Manager。
 
 | 层 | 职责 | 禁止 |
 |----|------|------|
-| **Controller** | 参数接收、JSR-303 校验、调用 Manager、返回结果 | 写任何业务逻辑 |
-| **Manager** | 编排多个 Service、处理复杂复合业务、事务控制 | 直接访问 Mapper |
-| **Service** | 单一原子业务、模块专属逻辑 | 跨模块调用其他 Service |
+| **Controller** | 参数接收、JSR-303 校验、调用 Service/Manager、返回结果 | 写任何业务逻辑 |
+| **Manager** | 编排多个 Service、处理复合业务、事务控制（需要时才加） | 单 Service 透传、直接访问 Mapper |
+| **Service** | 单一原子业务、模块专属逻辑 | — |
 | **Mapper** | 数据访问（MyBatis-Plus BaseMapper） | 写业务逻辑 |
 | **Entity** | 数据模型定义 | 写逻辑代码 |
 | **DTO** | 接口数据传输对象（Request/Response/VO） | — |
+
+**Manager 命名**: `{Domain}Manager`，表明编排的业务领域（如 `UserManager` 编排注册流程，调 UserService + CategoryService + JwtTokenProvider）。
 
 **Manager vs Service 的边界：**
 

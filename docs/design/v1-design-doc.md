@@ -185,10 +185,21 @@
   └── dto/           → @Data, request + response
 
 调用链路：
-  Controller → Manager → Service → Mapper → DB
-       ↕          ↕         ↕
-      DTO       编排      原子业务
+  单 Service 场景：  Controller → Service → Mapper → DB
+  多 Service 编排：  Controller → Manager → Service → Mapper → DB
+                       ↕          ↕         ↕
+                      DTO       编排      原子业务
                   
+  Manager 使用规则：
+  ┌──────────────────────────────────────────────────────────────┐
+  │ ✅ 有 Manager：编排 2+ 个 Service 时才需要（如 UserManager）│
+  │ ❌ 无 Manager：单 Service 调用，Controller 直调 Service      │
+  │                                                              │
+  │ Manager 不是必须有的层，是"需要时才加"的工具                   │
+  │ 禁止写只做透传的 Manager（Controller → Manager → Service）    │
+  │ 命名：{Domain}Manager，表明编排的业务领域                      │
+  └──────────────────────────────────────────────────────────────┘
+
   Service 和 Manager 默认是具体类，不需要 interface + impl。
   只有当需要多态（策略模式、多实现）时才提取接口。
 
