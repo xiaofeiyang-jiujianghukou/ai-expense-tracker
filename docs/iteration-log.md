@@ -7,6 +7,26 @@
 
 ## 迭代记录
 
+### #007 — 2026-07-11 | 前端全部完成 + 接口验证 + 代码 Review
+
+**类型**: 实现 + Review
+
+**内容**:
+- Sprint 6: Vue 3 前端骨架（Vite + Element Plus + Router + Pinia + Axios）
+- Sprint 7: 仪表盘、账单管理、分类管理页面
+- Sprint 8: 月度统计页面
+- Sprint 9: 代码规范检查、安全审查、README
+- 后端 13 个接口全部验证通过
+- 修复: TransactionManager Bean 名冲突、Flyway checksum 不匹配、createdTime null
+- 新增规范: 仅 GetMapping(单参) + PostMapping、写操作返回 void
+- 新增规范: 禁止全限定类名内联、时间戳由 DB 管理
+
+**文档版本**:
+- development-plan.md: 全部 Sprint 标记完成
+- README.md: 新建
+
+---
+
 ### #006 — 2026-07-11 | 开发规范沉淀：建表注释 + 配置管理
 
 **类型**: 规范
