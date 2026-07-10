@@ -1,5 +1,5 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/expense_tracker?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: root
+    url: jdbc:mysql://47.111.104.180:3306/ai_expense_tracker?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: ai-expense-tracker
+    password: xfylovesxy
