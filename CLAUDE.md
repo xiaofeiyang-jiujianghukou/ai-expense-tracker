@@ -182,6 +182,22 @@ CategoryService {
 - 认证方式 JWT Bearer Token
 - 统一响应体 `{ code, message, data }`
 
+### 5.4 数据库建表规范
+
+> 详见 [v1-design-doc.md §4.8](docs/design/v1-design-doc.md)
+
+- **表和字段必须加 COMMENT**，不允许无注释建表
+- 索引命名：`uk_xxx`（唯一）、`idx_xxx`（普通）
+- 统一 utf8mb4 + InnoDB
+
+### 5.5 配置管理规范
+
+> 详见 [v1-design-doc.md §4.9](docs/design/v1-design-doc.md)
+
+- **敏感信息（数据库密码等）走环境变量，无默认值**
+- 项目级配置（库名、JWT 秘钥）可硬编码
+- `${VAR}` 无默认值 = 强制设置；`${VAR:default}` = 可选
+
 ### 5.4 Git 规范
 
 ```

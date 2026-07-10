@@ -322,6 +322,73 @@ style: UI/layout changes
   style(dashboard): adjust amount card layout
 ```
 
+### 4.8 数据库建表规范
+
+**所有表和字段必须添加 COMMENT**，这是强制规范，不是可选项。
+
+```sql
+-- ✅ 正确：表有注释，字段有注释
+CREATE TABLE `user` (
+    id      BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    email   VARCHAR(255) NOT NULL           COMMENT '邮箱',
+    ...
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+
+-- ❌ 错误：无注释
+CREATE TABLE `user` (
+    id      BIGINT NOT NULL AUTO_INCREMENT,
+    email   VARCHAR(255) NOT NULL,
+    ...
+);
+```
+
+| 规范项 | 要求 |
+|--------|------|
+| 表注释 | `COMMENT='表用途说明'`，说明这张表存什么数据 |
+| 字段注释 | 每个字段加 `COMMENT`，说明含义；枚举字段注明可选值 |
+| 索引命名 | `uk_xxx`（唯一索引）、`idx_xxx`（普通索引） |
+| 字符集 | 统一 `utf8mb4` + `utf8mb4_unicode_ci` |
+| 引擎 | 统一 `InnoDB` |
+| 主键 | `BIGINT NOT NULL AUTO_INCREMENT`，不允许使用业务主键 |
+
+### 4.9 配置管理规范
+
+**敏感信息与核心资产永远不硬编码，走环境变量。**
+
+```
+分层原则：
+┌─────────────────────────────────────────────┐
+│  项目级配置（硬编码，随代码一起管理）          │
+│  · 数据库名、JWT 秘钥、JWT 过期时间          │
+│  · 这些配置不随部署环境变化                    │
+├─────────────────────────────────────────────┤
+│  部署级配置（环境变量，每个部署环境各自设置）    │
+│  · 数据库地址、端口、用户名、密码              │
+│  · 第三方服务 Key、Secret                    │
+│  · 这些配置随 dev/staging/prod 变化          │
+└─────────────────────────────────────────────┘
+```
+
+```yaml
+# application.yml — 项目级配置可以硬编码
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/ai_expense_tracker?...  # 库名硬编码
+    username: ${DB_USERNAME}   # ← 部署级，强制环境变量，无默认值
+    password: ${DB_PASSWORD}   # ← 部署级，强制环境变量，无默认值
+jwt:
+  secret: xxxxx                # ← 项目级，硬编码
+  expiration: 604800000        # ← 项目级，硬编码
+```
+
+| 配置类型 | 存放方式 | 示例 |
+|----------|----------|------|
+| DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD | 环境变量，无默认值 | `${DB_HOST}` |
+| 数据库名 | 硬编码 | `ai_expense_tracker` |
+| JWT 秘钥 | 硬编码 | `YWktZXhw...` |
+| JWT 过期时间 | 硬编码 | `604800000` |
+| Server 端口 | 环境变量 + 默认值 | `${SERVER_PORT:8080}` |
+
 ---
 
 ## 5. 设计反模式（避坑指南）
@@ -337,6 +404,8 @@ style: UI/layout changes
 | 跨域靠后端临时配置 | 生产不可控 | 开发用 proxy，生产用 Nginx |
 | 业务模块间直接依赖 | 微服务拆不动 | 通过 server 层编排 |
 | 没有空状态/加载态 | 白屏用户以为坏了 | Loading + Empty 组件 |
+| 建表不加 COMMENT | 无人知道表/字段含义 | 表注释 + 字段注释，强制规范 |
+| 敏感信息硬编码 | 泄露风险、环境切换困难 | DB 密码等走环境变量，无默认值 |
 
 ---
 
