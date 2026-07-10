@@ -8,7 +8,7 @@ spring:
     active: dev
 
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME:ai_expense_tracker}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/ai_expense_tracker?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
