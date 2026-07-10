@@ -9,7 +9,6 @@ import com.example.expense.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -29,9 +28,8 @@ public class CategoryService {
         category.setUserId(userId);
         category.setName(request.getName());
         category.setType(request.getType());
-        category.setCreatedTime(LocalDateTime.now());
         categoryMapper.insert(category);
-        return category;
+        return categoryMapper.selectById(category.getId());
     }
 
     public List<Category> listByUser(Long userId, String type) {
@@ -78,7 +76,6 @@ public class CategoryService {
                 category.setUserId(userId);
                 category.setName(name);
                 category.setType(type);
-                category.setCreatedTime(LocalDateTime.now());
                 categoryMapper.insert(category);
             }
         });

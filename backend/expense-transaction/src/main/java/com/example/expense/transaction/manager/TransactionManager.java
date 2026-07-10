@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Component
+@Component("transactionBizManager")
 @RequiredArgsConstructor
 public class TransactionManager {
 

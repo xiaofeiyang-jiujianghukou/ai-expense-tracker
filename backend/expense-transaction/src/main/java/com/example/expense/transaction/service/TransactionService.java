@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -27,10 +26,8 @@ public class TransactionService {
         txn.setType(request.getType());
         txn.setDescription(request.getDescription());
         txn.setTransactionDate(request.getTransactionDate());
-        txn.setCreatedTime(LocalDateTime.now());
-        txn.setUpdatedTime(LocalDateTime.now());
         transactionMapper.insert(txn);
-        return txn;
+        return transactionMapper.selectById(txn.getId());
     }
 
     public Page<Transaction> page(Long userId, String type, Long categoryId,
@@ -75,9 +72,8 @@ public class TransactionService {
         txn.setType(request.getType());
         txn.setDescription(request.getDescription());
         txn.setTransactionDate(request.getTransactionDate());
-        txn.setUpdatedTime(LocalDateTime.now());
         transactionMapper.updateById(txn);
-        return txn;
+        return transactionMapper.selectById(txn.getId());
     }
 
     public void delete(Long id, Long userId) {
