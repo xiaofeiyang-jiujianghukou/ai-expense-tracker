@@ -33,6 +33,13 @@ const router = createRouter({
       path: '/statistics',
       name: 'statistics',
       component: () => import('../views/statistics/MonthlyStats.vue')
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: to => {
+        // 未登录 → /login，已登录 → /dashboard
+        return isLoggedIn() ? '/dashboard' : '/login'
+      }
     }
   ]
 })
