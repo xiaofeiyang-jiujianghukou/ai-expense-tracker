@@ -36,10 +36,7 @@ const router = createRouter({
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: to => {
-        // 未登录 → /login，已登录 → /dashboard
-        return isLoggedIn() ? '/dashboard' : '/login'
-      }
+      redirect: '/login'
     }
   ]
 })
@@ -47,20 +44,11 @@ const router = createRouter({
 const publicPaths = ['/login', '/register']
 
 router.beforeEach((to, _from, next) => {
-  if (isLoggedIn()) {
-    // 已登录：访问登录/注册页 → 跳转仪表盘
-    if (publicPaths.includes(to.path)) {
-      next('/dashboard')
-    } else {
-      next()
-    }
+  // 已登录 → 不允许停留在登录/注册页
+  if (isLoggedIn() && publicPaths.includes(to.path)) {
+    next('/dashboard')
   } else {
-    // 未登录：允许访问登录/注册页，其他一律跳转登录
-    if (publicPaths.includes(to.path)) {
-      next()
-    } else {
-      next('/login')
-    }
+    next()
   }
 })
 
