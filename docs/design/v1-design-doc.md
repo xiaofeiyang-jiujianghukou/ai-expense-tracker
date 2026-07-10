@@ -420,6 +420,7 @@ jwt:
 | 敏感信息硬编码 | 泄露风险、环境切换困难 | DB 密码等走环境变量，无默认值 |
 | 写操作返回对象 | 浪费序列化开销、调用方不需要 | insert/update/delete 返回 ApiResponse\<Void\> |
 | 使用 @PutMapping/@DeleteMapping | HTTP 方法过多，维护复杂 | 仅保留 GetMapping(单参) + PostMapping(其他) |
+| 全限定类名代替 import | 冗余、可读性差 | 无冲突时一律用 import，禁止 `com.xxx.Foo` 内联 |
 
 ---
 
