@@ -45,14 +45,18 @@ const stats = ref({ income: 0, expense: 0, balance: 0 })
 
 onMounted(async () => {
   const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+
   try {
-    const [txns, st] = await Promise.all([
-      listBills({ page: 1, size: 8 }),
-      getMonthlyStats(now.getFullYear(), now.getMonth() + 1)
-    ])
-    recentBills.value = txns.data.records
-    stats.value = st.data
-  } catch { /* ignore */ }
+    const res = await listBills({ page: 1, size: 8 })
+    recentBills.value = res.data.records
+  } catch { /* bill list failed, keep empty */ }
+
+  try {
+    const res = await getMonthlyStats(year, month)
+    stats.value = res.data
+  } catch { /* stats failed, keep zeros */ }
 })
 </script>
 
