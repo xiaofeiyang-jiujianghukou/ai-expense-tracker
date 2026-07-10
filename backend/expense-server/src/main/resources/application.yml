@@ -21,7 +21,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
-      id-type: assign_id
+      id-type: auto
 
 jwt:
   secret: YWktZXhwZW5zZS10cmFja2VyLXNlY3JldC1rZXktMjAyNi1tdXN0LWJlLWxvbmctZW5vdWdo
