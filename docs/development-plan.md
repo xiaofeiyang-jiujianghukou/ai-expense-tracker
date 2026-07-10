@@ -7,7 +7,7 @@
 
 ## Sprint 0：项目初始化
 
-**状态**: 🔄 进行中
+**状态**: ✅ 已完成
 
 | 任务 | 描述 | 状态 |
 |------|------|------|
@@ -19,8 +19,8 @@
 | T006 | 创建 docs/development-plan.md | ✅ |
 | T007 | 创建 docs/iteration-log.md | ✅ |
 | T008 | 创建 docs/design/v1-design-doc.md | ✅ |
-| T009 | 创建 README.md | ⬜ |
-| T010 | 初始化 Git 仓库 | ⬜ |
+| T009 | 创建 .gitignore + 初始化 Git 仓库 | ✅ |
+| T010 | 关联远程 + 首次推送 | ✅ |
 
 ---
 
