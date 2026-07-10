@@ -1,9 +1,10 @@
 package com.example.expense.category.manager;
 
-import com.example.expense.category.dto.CategoryRequest;
-import com.example.expense.category.dto.CategoryVO;
+import com.example.expense.category.dto.*;
 import com.example.expense.category.entity.Category;
 import com.example.expense.category.service.CategoryService;
+import com.example.expense.common.exception.BusinessException;
+import com.example.expense.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,8 +26,16 @@ public class CategoryManager {
                 .toList();
     }
 
-    public void update(Long id, CategoryRequest request, Long userId) {
-        categoryService.update(id, request, userId);
+    public CategoryVO getById(Long id, Long userId) {
+        Category category = categoryService.findById(id);
+        if (!category.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        return toVO(category);
+    }
+
+    public void update(CategoryUpdateRequest request, Long userId) {
+        categoryService.update(request.getId(), request, userId);
     }
 
     public void delete(Long id, Long userId) {

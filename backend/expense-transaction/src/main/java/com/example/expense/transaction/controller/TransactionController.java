@@ -2,16 +2,12 @@ package com.example.expense.transaction.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.expense.common.ApiResponse;
-import com.example.expense.transaction.dto.TransactionRequest;
-import com.example.expense.transaction.dto.TransactionVO;
+import com.example.expense.transaction.dto.*;
 import com.example.expense.transaction.manager.TransactionManager;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -28,18 +24,13 @@ public class TransactionController {
         return ApiResponse.success();
     }
 
-    @GetMapping
-    public ApiResponse<Page<TransactionVO>> list(
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication auth) {
+    @PostMapping("/list")
+    public ApiResponse<Page<TransactionVO>> list(@RequestBody TransactionListRequest request,
+                                                  Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
-        return ApiResponse.success(transactionManager.page(userId, type, categoryId,
-                startDate, endDate, page, size));
+        return ApiResponse.success(transactionManager.page(userId, request.getType(),
+                request.getCategoryId(), request.getStartDate(), request.getEndDate(),
+                request.getPage(), request.getSize()));
     }
 
     @GetMapping("/{id}")
@@ -48,19 +39,19 @@ public class TransactionController {
         return ApiResponse.success(transactionManager.getById(id, userId));
     }
 
-    @PutMapping("/{id}")
-    public ApiResponse<Void> update(@PathVariable Long id,
-                                     @Valid @RequestBody TransactionRequest request,
+    @PostMapping("/update")
+    public ApiResponse<Void> update(@Valid @RequestBody TransactionUpdateRequest request,
                                      Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
-        transactionManager.update(id, request, userId);
+        transactionManager.update(request.getId(), request, userId);
         return ApiResponse.success();
     }
 
-    @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id, Authentication auth) {
+    @PostMapping("/delete")
+    public ApiResponse<Void> delete(@Valid @RequestBody TransactionDeleteRequest request,
+                                     Authentication auth) {
         Long userId = (Long) auth.getPrincipal();
-        transactionManager.delete(id, userId);
+        transactionManager.delete(request.getId(), userId);
         return ApiResponse.success();
     }
 }

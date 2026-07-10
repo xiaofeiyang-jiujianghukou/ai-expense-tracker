@@ -197,6 +197,11 @@
   - 调用方只需知道成功（code=200）或失败（异常），不需要返回对象
   - 特例：注册/登录等需返回 ID/Token 的可返回数据
   - 特例：乐观锁场景需判断 affected rows 时可返回 int
+
+  HTTP 方法限制：
+  - 仅使用 @GetMapping 和 @PostMapping，禁止 @PutMapping/@DeleteMapping
+  - @GetMapping 仅限单参数（路径变量 /{id} 或少量 QueryParam）
+  - 多参数查询、含 RequestBody 的请求一律 @PostMapping
 ```
 
 ### 3.4 多模块依赖设计
@@ -414,6 +419,7 @@ jwt:
 | 建表不加 COMMENT | 无人知道表/字段含义 | 表注释 + 字段注释，强制规范 |
 | 敏感信息硬编码 | 泄露风险、环境切换困难 | DB 密码等走环境变量，无默认值 |
 | 写操作返回对象 | 浪费序列化开销、调用方不需要 | insert/update/delete 返回 ApiResponse\<Void\> |
+| 使用 @PutMapping/@DeleteMapping | HTTP 方法过多，维护复杂 | 仅保留 GetMapping(单参) + PostMapping(其他) |
 
 ---
 

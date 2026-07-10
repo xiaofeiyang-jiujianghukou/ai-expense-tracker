@@ -177,10 +177,11 @@ CategoryService {
 
 ### 5.3 API 设计
 
-- 统一 RESTful 风格，URL 前缀 `/api/`
-- 请求/响应格式 JSON
-- 认证方式 JWT Bearer Token
-- 统一响应体 `{ code, message, data }`
+- URL 前缀 `/api/`，请求/响应格式 JSON
+- JWT Bearer Token 认证，统一响应体 `{ code, message, data }`
+- **仅使用 `@GetMapping` 和 `@PostMapping`**，禁止 `@PutMapping` / `@DeleteMapping`
+- `@GetMapping` 仅限单参数（路径变量 `/{id}`）；多参数筛选一律 `@PostMapping`
+- 写操作不返回对象，只返回 `ApiResponse<Void>`
 
 ### 5.4 数据库建表规范
 
