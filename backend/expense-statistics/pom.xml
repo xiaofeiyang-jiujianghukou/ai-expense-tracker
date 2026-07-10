@@ -19,8 +19,16 @@
             <artifactId>expense-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>expense-transaction</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
     </dependencies>
 </project>
