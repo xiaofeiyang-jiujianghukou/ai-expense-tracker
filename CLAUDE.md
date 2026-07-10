@@ -203,7 +203,17 @@ CategoryService {
 - 项目级配置（库名、JWT 秘钥）可硬编码
 - `${VAR}` 无默认值 = 强制设置；`${VAR:default}` = 可选
 
-### 5.4 Git 规范
+### 5.6 联调测试规范
+
+> 详见 [v1-design-doc.md §4.10](docs/design/v1-design-doc.md)
+
+- **每次开发完成后必须进行完整联调测试**，不能仅靠单接口验证
+- 13 项联调清单必须全部通过：注册→登录→CRUD→统计→Token 过期
+- 前端体验：操作有反馈、删除有确认、Loading 防重复、空状态占位
+- 未登录访问任何页面跳转登录页，不显示 403/空白
+- 401/403 自动清 Token 跳登录；200+code≠200 用 ElMessage 展示错误
+
+### 5.7 Git 规范
 
 ```
 分支: main → develop → feature/* / bugfix/*
