@@ -7,6 +7,74 @@
 
 ## 迭代记录
 
+### #010 — 2026-07-11 | AgentScope 2.0 集成 + Redis 缓存 + TTL + 验收
+
+**类型**: 架构升级 + 验收
+
+**内容**:
+- 引入 AgentScope Java 2.0.0-RC5（`agentscope-openai-spring-boot-starter` + `agentscope-harness`）
+- 删除手动 `AiConfig`/`RestTemplate`，改用 AgentScope 自动装配的 `Model` Bean + `HarnessAgent`
+- Redis 缓存 AI 分析和报告结果（analysis TTL 1h, report TTL 6h），缓存命中延迟 < 50ms
+- 阿里 TTL（`transmittable-thread-local`）/SSE 流式报告
+- Spring Security 适配 SSE（`requireExplicitSave(false)` + `SecurityContextHolder.MODE_INHERITABLETHREADLOCAL`）
+- 环境变量重命名策略：全局共享（`DB_HOST`/`LLM_API_KEY`）vs 项目专属（`EXPENSE_` 前缀）
+- Maven 编译规范：强制 UTF-8、个人仓库优先、不退缩原则
+- 验收流程规范写入 v1-design-doc.md §4.10
+- 编译输出乱码修复：父 POM `project.build.sourceEncoding=UTF-8` + `.mvn/maven.config`
+
+**文档版本**:
+- v1-design-doc.md: 1.5 → 1.6
+- CLAUDE.md: 同步更新
+- iteration-log.md: 追加
+
+---
+
+### #009 — 2026-07-11 | V2.0 AI 智能模块完成
+
+**类型**: 实现
+
+**内容**:
+- 新建 expense-ai Maven 模块（依赖 expense-bill + expense-category，不建表不写数据）
+- 对接 DeepSeek API（deepseek-v4-pro，OpenAI 兼容格式，RestTemplate 直调）
+- AI 自动分类（/api/ai/categorize）：填写描述后 AI 从已有分类中建议最匹配的分类
+- AI 消费洞察（/api/ai/analysis）：本月收支+分类数据 → 3-5 条个性化洞察
+- AI 财务报告（/api/ai/report）：月度财务摘要报告，支持与上月对比
+- 前端集成：BillList 防抖 800ms 自动触发 AI 分类建议、Dashboard AI 洞察卡片、MonthlyStats 一键生成报告
+- LLM 配置完全走环境变量（DEEPSEEK_API_KEY + AI_LLM_BASE_URL + AI_LLM_MODEL），支持随时切换模型
+- AI 调用失败优雅降级，不阻断基础记账功能
+- 全量文档同步：requirements 新增 AI-01~03，architecture 新增 expense-ai + AD-12/13，development-plan 新增 Sprint 10-12，README/CLAUDE.md 同步更新
+
+**文档版本**:
+- project-requirements.md: 1.3 → 1.4
+- architecture-design.md: 2.2 → 2.3
+- development-plan.md: 2.0 → 2.1
+- CLAUDE.md: 同步更新
+- README.md: 同步更新
+
+---
+
+### #008 — 2026-07-11 | 文档同步修复 + 文档同步规范
+
+**类型**: 规范 + 修复
+
+**变更原因**: 发现多个文档与代码实际状态不一致：development-plan 中 Sprint 1-5 仍标"待开始"、模块名 expense-transaction 已改为 expense-bill 但文档未同步、API 路径未同步。根本原因是缺少文档同步强制规范。
+
+**内容**:
+- development-plan.md: Sprint 1-5 状态从 ⬜ → ✅ 已完成
+- README.md: expense-transaction → expense-bill + API 路径 /api/transactions → /api/bills
+- CLAUDE.md: expense-transaction → expense-bill
+- architecture-design.md: expense-transaction → expense-bill（模块结构 + 依赖关系图）
+- v1-design-doc.md: expense-transaction → expense-bill + 新增 §4.11 文档同步规范
+- CLAUDE.md: 新增 §5.8 文档同步规范 + §6 重要规则中补充文档同步条目
+- 设计反模式新增：代码改了文档没同步
+
+**文档版本**:
+- v1-design-doc.md: 1.4 → 1.5
+- CLAUDE.md: 同步更新
+- development-plan.md: 状态更新
+
+---
+
 ### #007 — 2026-07-11 | 前端全部完成 + 接口验证 + 代码 Review
 
 **类型**: 实现 + Review
@@ -157,4 +225,4 @@
 | project-requirements.md | 1.3 | 2026-07-11 | 4 |
 | architecture-design.md | 2.2 | 2026-07-11 | 4 |
 | development-plan.md | 2.0 | 2026-07-11 | 2 |
-| v1-design-doc.md | 1.3 | 2026-07-11 | 4 |
+| v1-design-doc.md | 1.5 | 2026-07-11 | 5 |

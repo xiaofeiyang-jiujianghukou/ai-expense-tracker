@@ -11,6 +11,7 @@ AI 智能个人财务管理系统 — 前后端分离的个人记账应用。
 | 安全 | Spring Security · JWT (jjwt) · BCrypt |
 | 构建 | Maven 多模块 · npm |
 | 测试 | JUnit 5 · Mockito · TestContainers |
+| AI | DeepSeek API · deepseek-v4-pro · RestTemplate |
 
 ## 项目结构
 
@@ -21,8 +22,9 @@ ai-expense-tracker/
 │   ├── expense-security/            # 安全：JWT、SecurityConfig
 │   ├── expense-user/                # 用户模块
 │   ├── expense-category/            # 分类模块
-│   ├── expense-transaction/         # 账单模块
+│   ├── expense-bill/                # 账单模块
 │   ├── expense-statistics/          # 统计模块
+│   ├── expense-ai/                  # AI 智能模块（V2.0）
 │   └── expense-server/              # 启动入口
 ├── frontend/                        # Vue 3 前端
 │   └── src/
@@ -53,10 +55,25 @@ ai-expense-tracker/
 
 ```bash
 # 必须设置（敏感信息，无默认值）
-DB_HOST=47.111.104.180
+# 全局共享（所有项目通用）
+DB_HOST=your_db_host
 DB_PORT=3306
-DB_USERNAME=ai-expense-tracker
-DB_PASSWORD=your_password
+LLM_API_KEY=sk-your-key
+# 可选
+# LLM_MODEL=deepseek-v4-pro
+# LLM_BASE_URL=https://api.deepseek.com/v1/chat/completions
+
+# Redis（AI 缓存，无默认值）
+REDIS_HOST=your_redis_host
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+
+# AgentScope (AI 框架)
+# 无需额外配置，由 agentscope-openai-spring-boot-starter 自动装配
+
+# 项目专属（仅本项目的值）
+EXPENSE_DB_USERNAME=your_db_username
+EXPENSE_DB_PASSWORD=your_db_password
 ```
 
 ### 启动后端
@@ -87,12 +104,15 @@ POST /api/categories/list           分类列表
 GET  /api/categories/{id}           分类详情
 POST /api/categories/update         修改分类
 POST /api/categories/delete         删除分类
-POST /api/transactions              创建账单
-POST /api/transactions/list          筛选分页查询
-GET  /api/transactions/{id}         账单详情
-POST /api/transactions/update       修改账单
-POST /api/transactions/delete       删除账单
+POST /api/bills                      创建账单
+POST /api/bills/list                 筛选分页查询
+GET  /api/bills/{id}                 账单详情
+POST /api/bills/update               修改账单
+POST /api/bills/delete               删除账单
 POST /api/statistics/monthly        月度统计
+POST /api/ai/categorize              AI 自动分类
+POST /api/ai/analysis                AI 消费洞察
+POST /api/ai/report                  AI 财务报告
 ```
 
 ## 开发规范

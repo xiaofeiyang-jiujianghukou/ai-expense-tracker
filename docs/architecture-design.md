@@ -73,8 +73,9 @@ backend/
 │   ├── entity/
 │   └── dto/
 ├── expense-category/             # 分类模块（同结构）
-├── expense-transaction/          # 账单模块（同结构）
+├── expense-bill/                  # 账单模块（同结构）
 ├── expense-statistics/           # 统计模块（同结构）
+├── expense-ai/                   # AI 智能模块（V2.0，依赖 bill + category）
 └── expense-server/               # 启动模块（依赖所有业务模块 + 跨模块 Manager）
 ```
 
@@ -84,10 +85,10 @@ backend/
                     expense-server（启动 + 装配）
                    /    |      |        \
                   /     |      |         \
-    expense-user  expense-category  expense-transaction  expense-statistics
-                  \     |      |        /
-                   \    |      |       /
-                  expense-security     expense-common
+    expense-user  expense-category  expense-bill  expense-statistics  expense-ai
+                  \     |      |        /             |
+                   \    |      |       /              |
+                  expense-security     expense-common (expense-ai also depends on bill + category)
                          \            /
                           \          /
                            expense-common
@@ -506,3 +507,5 @@ Nginx (:80) ──▶ /api/* → Spring Boot (:8080)
 | AD-09 | TestContainers 集成测试 | 真实 MySQL，避免 H2 兼容性问题 | 2026-07-11 |
 | AD-10 | Manager 编排层 | Controller 与 Service 之间增加 Manager：Service 专注原子业务，Manager 编排多 Service | 2026-07-11 |
 | AD-11 | 去掉 interface + impl | Service 和 Manager 默认为具体类，只有一个实现时无需接口；需要多态时再提取接口 | 2026-07-11 |
+| AD-12 | DeepSeek API | V2.0 LLM 选用 DeepSeek（deepseek-v4-pro），OpenAI 兼容 API，RestTemplate 直调 | 2026-07-11 |
+| AD-13 | AI 模块只读不写 | expense-ai 不建新表、不写数据，纯计算/分析层，LLM 结果实时返回不持久化 | 2026-07-11 |

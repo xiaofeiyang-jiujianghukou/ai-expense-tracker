@@ -31,6 +31,8 @@
 | MySQL | 8.0 | 数据库 |
 | Flyway | 10.x | 数据库版本管理 |
 | Lombok | 1.18+ | 减少样板代码 |
+| AgentScope | 2.0.0-RC5 | AI 智能体框架（V2.0） |
+| DeepSeek API | v4-pro | LLM 模型 |
 | Maven | 3.x | 构建 & 多模块管理 |
 
 ### 前端
@@ -93,8 +95,9 @@ ai-expense-tracker/
 │   │   ├── entity/
 │   │   └── dto/
 │   ├── expense-category/              # 分类模块（同结构）
-│   ├── expense-transaction/           # 账单模块（同结构）
+│   ├── expense-bill/                  # 账单模块（同结构）
 │   ├── expense-statistics/            # 统计模块（同结构）
+│   ├── expense-ai/                    # AI 智能模块（V2.0，不建表，纯计算/分析）
 │   └── expense-server/                # 启动模块（Spring Boot 入口 + 全局配置 + 跨模块 Manager）
 │
 └── frontend/                          # Vue 3 前端项目（独立）
@@ -202,10 +205,18 @@ CategoryService {
 - **敏感信息（数据库密码等）走环境变量，无默认值**
 - 项目级配置（库名、JWT 秘钥）可硬编码
 - `${VAR}` 无默认值 = 强制设置；`${VAR:default}` = 可选
+- **环境变量命名分两类**：全局共享（`DB_HOST`、`LLM_API_KEY` 等）和项目专属（`EXPENSE_` 前缀，如 `EXPENSE_DB_PASSWORD`）。详见 [v1-design-doc.md §4.9](docs/design/v1-design-doc.md)
+- **设置前先检查是否存在同名变量**：同名同值不覆盖，同名异值用项目前缀新建
 
-### 5.6 联调测试规范
+### 5.6 验收与联调规范
 
-> 详见 [v1-design-doc.md §4.10](docs/design/v1-design-doc.md)
+> 详见 [v1-design-doc.md §4.10 验收流程规范 + §4.11 联调测试规范](docs/design/v1-design-doc.md)
+
+- **验收流程不可跳过**：编译 → API 模拟测试 → 浏览器验收 → 增量回归 → 人工验收
+- 测试方式必须如实标注：PowerShell/curl =「API模拟」、浏览器 =「浏览器」、不可混淆
+- 验收报告必须含「预期」和「实测」两列，实测填具体数值，不能只写"通过"
+- 增量验证原则：修复 BUG 后只验证修复项及其影响范围
+- 联调验收必须在浏览器中操作每个按钮/交互，打开 DevTools 确认零错误
 
 - **每次开发完成后必须进行完整联调测试**，不能仅靠单接口验证
 - 13 项联调清单必须全部通过：注册→登录→CRUD→统计→Token 过期
@@ -238,10 +249,36 @@ CategoryService {
 3. **Implement** — 修改代码、编写测试、运行测试确认通过
 4. **Review** — 检查代码质量、性能、安全、测试完整性
 
+### 5.8 AI 模块规范
+
+- **LLM 提供商**: DeepSeek（OpenAI 兼容 API），通过 RestTemplate 直调
+- **配置**: LLM 相关走全局变量 `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` / `LLM_PROVIDER`，切换模型只需改值
+- **模块依赖**: expense-ai 依赖 expense-bill + expense-category（读数据），不建表不写数据
+- **AI 调用失败不阻断业务**：所有 AI 功能优雅降级，LLM 不可用时基础记账操作不受影响
+- **Prompt 设计原则**: 结构化输出（要求返回 JSON）、限定范围（只从已有分类中选择）、Temperature 0.3
+
+### 5.9 文档同步规范
+
+> 详见 [v1-design-doc.md §4.11](docs/design/v1-design-doc.md)
+
+- **每次完成一个大的 Plan/Phase 后必须同步更新所有相关文档**，不能只改代码不改文档
+- **项目结构变更（模块改名、新增/删除模块、目录调整）必须同步更新以下所有文件中的引用**：
+  - `CLAUDE.md` — §4 项目目录结构
+  - `README.md` — 项目结构
+  - `docs/architecture-design.md` — 模块结构 + 依赖关系图
+  - `docs/design/v1-design-doc.md` — 多模块依赖设计
+  - `docs/development-plan.md` — 所有涉及该模块名称的地方
+- `docs/development-plan.md` 中各 Sprint 的状态标记必须与实际情况一致
+- 文档一致性检查清单：改模块名 → `grep` 全局搜索旧名称 → 逐文件替换 → 确认无遗漏
+
 ### 重要规则
 
 - 所有需求变更 → 更新 `docs/project-requirements.md`
 - 所有架构变更 → 更新 `docs/architecture-design.md`
 - 每次迭代完成 → 追加 `docs/iteration-log.md`
+- 每次大 Plan 完成 → 同步所有相关文档的状态和引用（见 §5.9）
+- 项目结构变更 → 全局搜索旧名称，逐文档更新（见 §5.9）
 - 需求/架构文档保持精简，只保留最新状态
 - 历史决策和变更原因记录在迭代日志中
+- 遇到问题不许退缩，追根究底解决；如需降级版本必须先获批准
+- Maven 优先去阿里云镜像搜索最新版本；编译输出乱码立即修复（见 §4.12）

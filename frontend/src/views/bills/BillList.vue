@@ -49,6 +49,13 @@
               <el-option v-for="c in filteredCategories" :key="c.id" :label="c.name" :value="c.id" />
             </el-select>
           </el-form-item>
+          <el-form-item v-if="aiSuggestion" label="AI建议">
+            <el-tag type="success" :loading="aiSuggesting" class="ai-tag"
+              @click="applyAiSuggestion">
+              {{ aiSuggestion.categoryName }} ({{ (aiSuggestion.confidence * 100).toFixed(0) }}%)
+            </el-tag>
+            <span class="ai-reason">{{ aiSuggestion.reason }}</span>
+          </el-form-item>
           <el-form-item label="金额" prop="amount">
             <el-input-number v-model="form.amount" :min="0.01" :precision="2" style="width:100%" />
           </el-form-item>
@@ -69,11 +76,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppLayout from '../../components/AppLayout.vue'
 import { listBills, createBill, updateBill, deleteBill, type BillVO } from '../../api/bill'
 import { listCategories, type CategoryVO } from '../../api/category'
+import { categorize, type CategorizeResponse } from '../../api/ai'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -83,6 +91,8 @@ const total = ref(0)
 const categories = ref<CategoryVO[]>([])
 const editingId = ref<number | null>(null)
 const formRef = ref()
+const aiSuggesting = ref(false)
+const aiSuggestion = ref<CategorizeResponse | null>(null)
 
 const filters = reactive({ type: '', categoryId: null as number | null, dateRange: null as [string, string] | null, page: 1, size: 10 })
 const form = reactive({ type: 'EXPENSE', categoryId: null as number | null, amount: 0, transactionDate: '', description: '' })
@@ -94,6 +104,31 @@ const rules = {
 }
 
 const filteredCategories = computed(() => categories.value.filter(c => c.type === form.type))
+
+// Debounced AI categorization watcher
+let aiTimer: ReturnType<typeof setTimeout> | null = null
+watch([() => form.description, () => form.type], ([desc, type]) => {
+  aiSuggestion.value = null
+  if (!desc || desc.trim().length < 2) return
+  if (aiTimer) clearTimeout(aiTimer)
+  aiTimer = setTimeout(() => fetchAiSuggestion(desc, type), 800)
+})
+
+async function fetchAiSuggestion(description: string, type: string) {
+  aiSuggesting.value = true
+  try {
+    const res = await categorize({ description, amount: form.amount || 1, type })
+    if (res.data?.categoryId) {
+      aiSuggestion.value = res.data
+    }
+  } catch { /* AI failure is non-blocking */ }
+  finally { aiSuggesting.value = false }
+}
+
+function applyAiSuggestion() {
+  if (!aiSuggestion.value) return
+  form.categoryId = aiSuggestion.value.categoryId
+}
 
 onMounted(async () => {
   const cats = await listCategories()
@@ -161,4 +196,6 @@ async function handleDelete(id: number) {
 .pager { margin-top: 16px; display: flex; justify-content: flex-end; }
 .income-text { color: #67c23a; }
 .expense-text { color: #f56c6c; }
+.ai-tag { cursor: pointer; }
+.ai-reason { margin-left: 8px; color: #909399; font-size: 12px; }
 </style>

@@ -22,7 +22,10 @@ public enum ErrorCode {
     BILL_NOT_FOUND(40403, "账单不存在"),
 
     // 500 - Internal Server Error
-    INTERNAL_ERROR(50001, "服务器内部错误");
+    INTERNAL_ERROR(50001, "服务器内部错误"),
+    AI_CATEGORIZE_FAILED(50002, "AI 自动分类失败，请重试"),
+    AI_ANALYSIS_FAILED(50003, "AI 消费分析失败，请重试"),
+    AI_REPORT_FAILED(50004, "AI 财务报告生成失败，请重试");
 
     private final int code;
     private final String message;

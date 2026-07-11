@@ -7,6 +7,18 @@
         <el-card class="card balance"><div class="label">本月结余</div><div class="value">¥{{ stats.balance }}</div></el-card>
       </div>
 
+      <el-card class="insights" v-if="insights.length">
+        <template #header>
+          <div class="card-header">
+            <span>AI 消费洞察</span>
+            <el-button type="primary" size="small" :loading="insightLoading" @click="refreshInsights">重新生成</el-button>
+          </div>
+        </template>
+        <ul>
+          <li v-for="(item, i) in insights" :key="i">{{ item }}</li>
+        </ul>
+      </el-card>
+
       <el-card class="recent">
         <template #header>
           <div class="card-header">
@@ -37,11 +49,15 @@ import { useRouter } from 'vue-router'
 import AppLayout from '../../components/AppLayout.vue'
 import { listBills, type BillVO } from '../../api/bill'
 import { getMonthlyStats } from '../../api/statistics'
+import { getAnalysis } from '../../api/ai'
+import { getToken } from '../../utils/auth'
 
 const router = useRouter()
 const loading = ref(false)
 const recentBills = ref<BillVO[]>([])
 const stats = ref({ income: 0, expense: 0, balance: 0 })
+const insights = ref<string[]>([])
+const insightLoading = ref(false)
 
 onMounted(async () => {
   const now = new Date()
@@ -57,7 +73,55 @@ onMounted(async () => {
     const res = await getMonthlyStats(year, month)
     stats.value = res.data
   } catch { /* stats failed, keep zeros */ }
+
+  // Default: load from cache
+  loadInsights(year, month)
 })
+
+async function loadInsights(year: number, month: number) {
+  try {
+    const res = await getAnalysis({ year, month })
+    insights.value = res.data.insights
+  } catch { /* AI failed, non-blocking */ }
+}
+
+async function refreshInsights() {
+  insightLoading.value = true
+  insights.value = []
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+  try {
+    const token = getToken()
+    const resp = await fetch('/api/ai/analysis/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ year, month, forceRefresh: true })
+    })
+    const reader = resp.body?.getReader()
+    if (!reader) throw new Error('No body')
+    const decoder = new TextDecoder()
+    let buffer = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) {
+        if (line.startsWith('event:line') || line.startsWith('event:chunk')) continue
+        if (line.startsWith('data:')) {
+          const text = line.substring(5)
+          if (text) {
+            text.split('\n').filter(l => l.trim()).forEach(l => insights.value.push(l.trim()))
+          }
+        }
+        if (line.startsWith('event:done')) { return }
+      }
+    }
+  } catch { /* AI failed, non-blocking */ }
+  finally { insightLoading.value = false }
+}
 </script>
 
 <style scoped>
@@ -71,4 +135,7 @@ onMounted(async () => {
 .card-header { display: flex; justify-content: space-between; align-items: center; }
 .income-text { color: #67c23a; }
 .expense-text { color: #f56c6c; }
+.insights { margin-bottom: 16px; }
+.insights ul { margin: 0; padding-left: 20px; }
+.insights li { margin-bottom: 6px; color: #606266; line-height: 1.6; }
 </style>

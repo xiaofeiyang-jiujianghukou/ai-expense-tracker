@@ -4,6 +4,7 @@
       <div class="toolbar">
         <el-date-picker v-model="selectedMonth" type="month" format="YYYY年M月" value-format="YYYY-MM"
           placeholder="选择月份" @change="fetchStats" />
+        <el-button type="primary" :loading="reportLoading" @click="fetchReport">生成 AI 报告</el-button>
       </div>
 
       <div class="cards">
@@ -27,6 +28,11 @@
           </el-table-column>
         </el-table>
       </el-card>
+
+      <el-card v-if="report" class="report-card">
+        <template #header><span>AI 财务报告</span></template>
+        <div class="report-content">{{ report }}</div>
+      </el-card>
     </div>
   </AppLayout>
 </template>
@@ -35,12 +41,16 @@
 import { ref, reactive, onMounted } from 'vue'
 import AppLayout from '../../components/AppLayout.vue'
 import { getMonthlyStats } from '../../api/statistics'
+import { getReport } from '../../api/ai'
+import { getToken } from '../../utils/auth'
 
 const now = new Date()
 const selectedMonth = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
 const stats = reactive({ income: 0, expense: 0, balance: 0, categoryBreakdown: [] as any[] })
+const report = ref('')
+const reportLoading = ref(false)
 
-onMounted(() => fetchStats())
+onMounted(() => { fetchStats(); loadCachedReport() })
 async function fetchStats() {
   const [y, m] = selectedMonth.value.split('-')
   try {
@@ -48,10 +58,59 @@ async function fetchStats() {
     Object.assign(stats, res.data)
   } catch { /* ignore */ }
 }
+
+// Load cached report on page enter (no force refresh)
+async function loadCachedReport() {
+  const [y, m] = selectedMonth.value.split('-')
+  try {
+    const res = await getReport({ year: Number(y), month: Number(m) })
+    report.value = res.data.report
+  } catch { /* no cache or error, wait for user to click generate */ }
+}
+
+// Force regenerate via SSE streaming
+async function fetchReport() {
+  reportLoading.value = true
+  report.value = ''
+  const [y, m] = selectedMonth.value.split('-')
+  try {
+    const token = getToken()
+    const resp = await fetch('/api/ai/report/stream', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ year: Number(y), month: Number(m), forceRefresh: true })
+    })
+    const reader = resp.body?.getReader()
+    if (!reader) throw new Error('No response body')
+    const decoder = new TextDecoder()
+    let buffer = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) {
+        if (line.startsWith('event:chunk')) continue
+        if (line.startsWith('data:')) {
+          report.value += line.substring(5)
+        }
+        if (line.startsWith('event:done')) {
+          reportLoading.value = false
+          return
+        }
+      }
+    }
+  } catch { /* AI failed, non-blocking */ }
+  finally { reportLoading.value = false }
+}
 </script>
 
 <style scoped>
-.toolbar { margin-bottom: 16px; }
+.toolbar { margin-bottom: 16px; display: flex; gap: 12px; align-items: center; }
 .cards { display: flex; gap: 16px; margin-bottom: 20px; }
 .card { flex: 1; text-align: center; }
 .card .label { color: #999; font-size: 14px; }
@@ -61,4 +120,6 @@ async function fetchStats() {
 .card.balance .value { color: #409eff; }
 .pct-bar { display: flex; align-items: center; gap: 8px; }
 .pct-fill { height: 8px; background: #409eff; border-radius: 4px; min-width: 2px; }
+.report-card { margin-top: 20px; }
+.report-content { white-space: pre-wrap; line-height: 1.8; color: #606266; }
 </style>

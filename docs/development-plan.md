@@ -26,7 +26,7 @@
 
 ## Sprint 1：项目骨架（后端）
 
-**状态**: ⬜ 待开始
+**状态**: ✅ 已完成
 
 **目标**: Maven 多模块父 POM + expense-common + expense-server 可启动 + 数据库连通
 
@@ -50,7 +50,7 @@
 
 ## Sprint 2：用户模块（后端）
 
-**状态**: ⬜ 待开始
+**状态**: ✅ 已完成
 
 **目标**: 注册 + 登录 + JWT 认证链路打通
 
@@ -75,7 +75,7 @@
 
 ## Sprint 3：分类模块（后端）
 
-**状态**: ⬜ 待开始
+**状态**: ✅ 已完成
 
 **目标**: 分类 CRUD + 新用户注册自动创建默认分类
 
@@ -98,7 +98,7 @@
 
 ## Sprint 4：账单模块（后端核心）
 
-**状态**: ⬜ 待开始
+**状态**: ✅ 已完成
 
 **目标**: 账单 CRUD + 多条件筛选分页 + 归属校验
 
@@ -120,7 +120,7 @@
 
 ## Sprint 5：统计模块（后端）
 
-**状态**: ⬜ 待开始
+**状态**: ✅ 已完成
 
 **目标**: 月度汇总 + 分类统计
 
@@ -230,7 +230,11 @@
 | Sprint 7 | 前端核心页面 | 12h |
 | Sprint 8 | 前端统计+联调 | 6h |
 | Sprint 9 | 完善 Review | 8h |
-| **合计** | | **~71h** |
+| **V2.0 合计** | | **~20h** |
+| Sprint 10 | AI 基础设施 + 自动分类（后端） | 6h |
+| Sprint 11 | 自动分类前端 + 消费洞察 | 7h |
+| Sprint 12 | 财务报告 + 联调 | 7h |
+| **总计** | | **~91h** |
 
 ---
 
@@ -246,3 +250,58 @@
 ```
 
 后端先用 Postman 自测，API 稳定后再启动前端开发，减少前后端返工。
+
+---
+
+## Sprint 10：AI 基础设施 + 自动分类（后端）
+
+**状态**: ✅ 已完成
+
+**目标**: 创建 expense-ai 模块，对接 DeepSeek API，实现账单自动分类
+
+| 任务 | 描述 | 关联 |
+|------|------|------|
+| T1001 | 创建 expense-ai Maven 模块（POM + 目录结构 + 父 POM 注册 + server 依赖） | AI-01 |
+| T1002 | ErrorCode 新增 AI 错误码（50002-50004） | AI-01 |
+| T1003 | AiConfig 配置类（@ConfigurationProperties + RestTemplate Bean） | AI-01 |
+| T1004 | LlmClient（RestTemplate 调 DeepSeek Chat Completions API） | AI-01 |
+| T1005 | AiCategoryService（读分类 → 构造 prompt → 调 LLM → 解析） | AI-01 |
+| T1006 | AiController（/api/ai/categorize 端点） | AI-01 |
+| T1007 | application.yml 新增 ai.llm 配置段（base-url、api-key、model） | AI-01 |
+
+**产出物**: `POST /api/ai/categorize` 输入描述+金额 → 返回建议分类+置信度
+
+---
+
+## Sprint 11：自动分类前端 + 消费洞察
+
+**状态**: ✅ 已完成
+
+**目标**: 前端集成 AI 分类建议 + Dashboard AI 消费洞察
+
+| 任务 | 描述 | 关联 |
+|------|------|------|
+| T1101 | AiAnalysisService（查月度数据 → 构造分析 prompt → 调 LLM） | AI-02 |
+| T1102 | AiController 新增 /api/ai/analysis 端点 | AI-02 |
+| T1103 | 前端 api/ai.ts API 封装 | AI-01,02 |
+| T1104 | BillList 新增/编辑弹窗集成 AI 分类建议（防抖 800ms） | AI-01 |
+| T1105 | Dashboard 新增「AI 消费洞察」卡片 | AI-02 |
+
+**产出物**: 记账时 AI 自动建议分类 + 首页 AI 消费洞察
+
+---
+
+## Sprint 12：财务报告 + 联调
+
+**状态**: ✅ 已完成
+
+**目标**: AI 财务报告 + 文档同步
+
+| 任务 | 描述 | 关联 |
+|------|------|------|
+| T1201 | AiReportService（生成月度财务报告，含上月对比） | AI-03 |
+| T1202 | AiController 新增 /api/ai/report 端点 | AI-03 |
+| T1203 | MonthlyStats 页面集成「生成 AI 报告」按钮 | AI-03 |
+| T1204 | 文档同步（requirements / architecture / development-plan / README / CLAUDE.md） | — |
+
+**产出物**: 统计页一键生成 AI 财务报告
