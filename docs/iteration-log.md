@@ -241,6 +241,31 @@
 
 ---
 
+### #013 — 2026-07-11 | V3.0 Sprint 1-2: 趋势分析 + ECharts + 预算模块 + SecurityUtil 重构
+
+**类型**: 实现 + 重构
+
+**内容**:
+- V3 Sprint 1: 趋势 API（trend/daily）+ ECharts 三组件 + TrendAnalysis 页面
+- BillType 枚举替代所有 INCOME/EXPENSE 魔法值
+- transaction→bill 全面清理（DB表/列/实体/前端/文档）
+- 预算模块（expense-budget + V6 migration + CRUD API）
+- AI 预算建议（BudgetAdviceService：近3月分类×月份统计 + 有效月均值 + 趋势 + 推算全月）
+- AI 异常检测（/ai/anomaly）
+- SecurityUtil 统一获取用户ID，全部 Controller 去掉 Authentication 参数
+- 前端 BudgetManage.vue + 路由
+- Markdown 渲染修复（SSE 新行丢失 + marked 库）
+- 编码修复：logback-spring.xml 强制 UTF-8
+- 验收规范：增量回归原则写入设计文档
+- 命名规范：避开 Java/Spring 通用关键字
+
+**文档版本**:
+- v1-design-doc.md: 新增枚举规范 + 命名冲突 + 增量回归规则
+- CLAUDE.md: 新增 §5.8 枚举规范 + §6 工作习惯规范
+- iteration-log.md: 追加
+
+---
+
 ### #012 — 2026-07-11 | V2.0 浏览器验收完成 + SSE 流式优化 + Markdown 渲染
 
 **类型**: 验收 + 修复 + 优化
