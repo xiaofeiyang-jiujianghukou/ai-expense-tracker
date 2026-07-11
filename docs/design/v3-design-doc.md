@@ -55,7 +55,7 @@ expense-budget/
 | Excel | EasyExcel 4.0.3 + 美化样式 | `POST /api/statistics/export-excel` |
 | PDF | 客户端 window.print() + 弹窗 | 前端 MonthlyStats.vue |
 
-**Excel 美化要求**：深蓝表头白字粗体、全单元格细线边框、内容自动换行、CJK 感知自适应列宽带呼吸间距。详见 [development-standards.md §14](../development-standards.md)。
+**Excel 美化要求**：深蓝表头白字粗体、全单元格细线边框、内容自动换行、CJK 感知自适应列宽带呼吸间距。详见 [development-standards.md §2.7](../development-standards.md)。
 
 ### 2.4 枚举标准化
 

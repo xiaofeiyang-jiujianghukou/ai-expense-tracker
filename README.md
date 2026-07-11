@@ -36,10 +36,13 @@ ai-expense-tracker/
 └── docs/                            # 项目文档
     ├── project-requirements.md      # 需求文档
     ├── architecture-design.md       # 架构设计
+    ├── development-standards.md     # 开发设计规范（持续演进）
     ├── development-plan.md          # 开发计划
     ├── iteration-log.md             # 迭代日志
     └── design/
-        └── v1-design-doc.md         # V1 设计稿
+        ├── v1-design-doc.md         # V1 设计稿（已冻结）
+        ├── v2-design-doc.md         # V2 设计稿（已冻结）
+        └── v3-design-doc.md         # V3 设计稿（已冻结）
 ```
 
 ## 快速开始
@@ -117,7 +120,7 @@ POST /api/ai/report                  AI 财务报告
 
 ## 开发规范
 
-详见 [docs/design/v1-design-doc.md](docs/design/v1-design-doc.md)
+详见 [docs/development-standards.md](docs/development-standards.md)
 
 - Controller → Manager → Service → Mapper 五层架构
 - 仅 GET(单参) + POST 两种 HTTP 方法

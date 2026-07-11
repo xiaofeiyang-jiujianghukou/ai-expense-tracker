@@ -85,7 +85,7 @@
 | NFR-04 | API | 统一 RESTful 风格，JSON 格式 |
 | NFR-05 | 数据库 | Flyway 管理数据库版本 |
 | NFR-06 | 代码 | 分层清晰：Controller → Manager → Service → Mapper → Entity |
-| NFR-07 | 设计规范 | 遵循 `docs/design/v1-design-doc.md` 中的命名、分包、异常、校验规范 |
+| NFR-07 | 设计规范 | 遵循 `docs/development-standards.md` 中的命名、分包、异常、校验规范 |
 | NFR-08 | 异常处理 | 统一错误码体系，全局异常处理器拦截 |
 | NFR-09 | 参数校验 | JSR-303 注解校验 + Service 层业务校验 |
 | NFR-10 | DTO 隔离 | Entity 不暴露到 Controller，使用 DTO 传输 |
