@@ -282,3 +282,19 @@ CategoryService {
 - 历史决策和变更原因记录在迭代日志中
 - 遇到问题不许退缩，追根究底解决；如需降级版本必须先获批准
 - Maven 优先去阿里云镜像搜索最新版本；编译输出乱码立即修复（见 §4.12）
+
+### 退出会话检查清单（/exit 前强制执行）
+
+每次 `/exit` 前必须逐项确认：
+
+```
+☐ 代码已 git commit，提交信息符合规范（type(module): message）
+☐ 所有修改过的文档已保存并 git add（CLAUDE.md / README.md / requirements / architecture / development-plan / iteration-log / v1-design-doc）
+☐ 本次迭代已写入 docs/iteration-log.md
+☐ docs/development-plan.md 中 Sprint 状态与实际情况一致
+☐ projects/.../memory/ 下的进展状态文件已更新
+☐ projects/.../MEMORY.md 索引已包含本次进展的指针
+☐ 下次继续的任务和上下文已明确记录（重启命令、环境变量、当前验收进度）
+```
+
+**未完成以上清单不得 /exit。**
