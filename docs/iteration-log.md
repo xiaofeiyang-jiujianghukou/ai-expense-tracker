@@ -7,6 +7,29 @@
 
 ## 迭代记录
 
+### #011 — 2026-07-11 | V2.0 浏览器验收准备 + MCP 配置 + API 测试规范
+
+**类型**: 规范 + 工具
+
+**内容**:
+- V2.0 后端 API 验收全部通过（8/8）：categorize/analysis/report/stream/auth/cache
+- 前端代理测试通过（9/9）：通过 Vite proxy 验证所有 API 端点
+- `docs/design/v1-design-doc.md` 新增 API 测试前置规则：调用任何 API 前必须先查 DTO 确认字段名
+- 配置 Playwright MCP 服务器（`.mcp.json` + `@playwright/mcp@latest`，24 tools）
+- `frontend/` 安装 playwright 作为 devDependency
+- 项目 `.claude/settings.json` 新增权限缓存（read-only PowerShell 命令 + WebSearch/WebFetch）
+- 浏览器 UI 验收清单已确认，待 Playwright MCP 驱动完成
+
+**待完成**:
+- 在加载了 Playwright MCP 的新会话中完成 8 项浏览器 UI 验收
+- expense-ai 模块零测试类，需补 Controller 集成测试
+
+**文档版本**:
+- v1-design-doc.md: 1.6 → 1.7（API 测试 DTO 预查规则）
+- iteration-log.md: 追加
+
+---
+
 ### #010 — 2026-07-11 | AgentScope 2.0 集成 + Redis 缓存 + TTL + 验收
 
 **类型**: 架构升级 + 验收
