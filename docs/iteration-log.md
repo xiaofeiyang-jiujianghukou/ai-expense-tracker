@@ -241,6 +241,28 @@
 
 ---
 
+### #012 — 2026-07-11 | V2.0 浏览器验收完成 + SSE 流式优化 + Markdown 渲染
+
+**类型**: 验收 + 修复 + 优化
+
+**内容**:
+- 9 项浏览器 UI 验收全部通过（Playwright MCP 驱动）
+- **修复 AI 洞察 SSE 重复**：后端每 chunk 重发全量文本 → 改为只发增量（`sentLength` 追踪），前端累积拆分
+- **修复 SSE 换行丢失**：Spring SseEmitter 拆分多行 `data:` 时前后端均未补 `\n`，markdown 解析失效 → 前后端均加 `prevWasData` 补换行
+- **修复 AI 分类 24.8s 延迟**：`LlmClient.chat()` 非流式 `.call().block()` → 改用流式内部累积；`CategorizeResponse` 缺 `@NoArgsConstructor` 导致缓存 JSON 反序列化失败
+- **新增 categorize Redis 缓存**：TTL 10min，命中 26ms（~300x 加速）
+- **新增 Markdown 渲染**：安装 `marked`，`v-html` 替代 `{{ report }}`，完整元素 CSS（table/h2/blockquote/ul/ol）
+- **结构化报告 Prompt**：显式要求 `## 总体评估 | ## 收支对比 | table | ## 分类观察 | ## 理财建议`
+- **卡片常驻**：仪表盘 AI 洞察 + 统计页 AI 报告卡片始终可见，无数据时显示转圈占位
+- **修复流式最后一行延迟**：后端不等 `\n` 直接逐 chunk 转发；前端累积拆分，最后不完整行作为 `typingHint` 实时显示
+- **修复 AgentScope 12s 清理延迟**：`.takeUntil(AGENT_END)` 一刀切断内部清理，总耗时 17.3s → 4.8s
+- **耗时分析**：通过事件级日志定位到 DeepSeek thinking 2.4s + AgentScope 内部清理 12s
+
+**文档版本**:
+- iteration-log.md: 追加
+
+---
+
 ## 文档版本追踪
 
 | 文档 | 当前版本 | 最后更新 | 变更次数 |
