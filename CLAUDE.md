@@ -345,9 +345,17 @@ CategoryService {
 
 ```
 ☐ 代码已 git commit，提交信息符合规范（type(module): message）
-☐ 所有修改过的文档已保存并 git add（CLAUDE.md / README.md / requirements / architecture / development-plan / iteration-log / v1-design-doc）
+☐ 所有修改过的文档已保存并 git add：
+   CLAUDE.md / README.md / project-requirements / architecture-design /
+   development-standards / development-plan / iteration-log /
+   docs/design/v1~v3-design-doc
 ☐ 本次迭代已写入 docs/iteration-log.md
 ☐ docs/development-plan.md 中 Sprint 状态与实际情况一致
+☐ 文档交叉引用一致性检查：
+   ☐ 新文档（v2/v3-design-doc / development-standards）是否已被其他文档引用
+   ☐ 旧引用（v1-design-doc.md §4.x）是否已更新为 development-standards.md 对应章节
+   ☐ 架构/需求/README 中的小节编号是否与父章节一致
+   ☐ 文件名/路径引用链接是否有效
 ☐ projects/.../memory/ 下的进展状态文件已更新
 ☐ projects/.../MEMORY.md 索引已包含本次进展的指针
 ☐ 下次继续的任务和上下文已明确记录（重启命令、环境变量、当前验收进度）
