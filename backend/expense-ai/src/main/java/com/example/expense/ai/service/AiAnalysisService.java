@@ -11,12 +11,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AiAnalysisService {
@@ -103,18 +105,8 @@ public class AiAnalysisService {
         StringBuilder full = new StringBuilder();
         llmClient.chatStream(systemPrompt, userMessage, chunk -> {
             full.append(chunk);
-            // Send each complete line as it arrives
-            String current = full.toString();
-            int lastNewline = current.lastIndexOf('\n');
-            if (lastNewline >= 0) {
-                onLine.accept(current.substring(0, lastNewline + 1));
-            }
+            onLine.accept(chunk);
         });
-        // Send remaining text
-        String remainder = full.toString();
-        if (!remainder.isBlank()) {
-            onLine.accept(remainder);
-        }
         // Cache the full result as serialized insights
         cacheService.putAnalysis(userId, year, month, serializeInsights(parseInsights(full.toString())));
     }

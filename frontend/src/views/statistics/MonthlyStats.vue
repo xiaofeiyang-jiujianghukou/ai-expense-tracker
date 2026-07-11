@@ -29,26 +29,41 @@
         </el-table>
       </el-card>
 
-      <el-card v-if="report" class="report-card">
+      <el-card class="report-card">
         <template #header><span>AI 财务报告</span></template>
-        <div class="report-content">{{ report }}</div>
+        <div v-if="report" class="report-content" v-html="renderedReport"></div>
+        <div v-else class="report-placeholder">
+          <el-icon class="is-loading" :size="24"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M512 64a32 32 0 0 1 32 32v192a32 32 0 0 1-64 0V96a32 32 0 0 1 32-32zm0 640a32 32 0 0 1 32 32v192a32 32 0 0 1-64 0V736a32 32 0 0 1 32-32zm448-192a32 32 0 0 1-32 32H736a32 32 0 0 1 0-64h192a32 32 0 0 1 32 32zm-640 0a32 32 0 0 1-32 32H96a32 32 0 0 1 0-64h192a32 32 0 0 1 32 32z"/></svg></el-icon>
+          <span>{{ reportLoading || reportInitialLoading ? 'AI 正在生成财务报告…' : '点击「生成 AI 报告」获取月度财务分析' }}</span>
+        </div>
       </el-card>
     </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import AppLayout from '../../components/AppLayout.vue'
 import { getMonthlyStats } from '../../api/statistics'
 import { getReport } from '../../api/ai'
 import { getToken } from '../../utils/auth'
+import { marked } from 'marked'
 
 const now = new Date()
 const selectedMonth = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
 const stats = reactive({ income: 0, expense: 0, balance: 0, categoryBreakdown: [] as any[] })
 const report = ref('')
 const reportLoading = ref(false)
+const reportInitialLoading = ref(true)
+const renderedReport = ref('')
+
+// Watch + manual assignment ensures every streaming chunk triggers a fresh markdown → HTML render.
+// Using computed() can cause stale rendering during SSE because Vue may cache the result
+// when the accumulated text hasn't produced a structurally different HTML output yet.
+watch(report, (val) => {
+  if (!val) { renderedReport.value = ''; return }
+  renderedReport.value = marked(val) as string
+})
 
 onMounted(() => { fetchStats(); loadCachedReport() })
 async function fetchStats() {
@@ -61,11 +76,13 @@ async function fetchStats() {
 
 // Load cached report on page enter (no force refresh)
 async function loadCachedReport() {
+  reportInitialLoading.value = true
   const [y, m] = selectedMonth.value.split('-')
   try {
     const res = await getReport({ year: Number(y), month: Number(m) })
     report.value = res.data.report
   } catch { /* no cache or error, wait for user to click generate */ }
+  finally { reportInitialLoading.value = false }
 }
 
 // Force regenerate via SSE streaming
@@ -87,6 +104,7 @@ async function fetchReport() {
     if (!reader) throw new Error('No response body')
     const decoder = new TextDecoder()
     let buffer = ''
+    let prevWasData = false
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
@@ -96,8 +114,16 @@ async function fetchReport() {
       for (const line of lines) {
         if (line.startsWith('event:chunk')) continue
         if (line.startsWith('data:')) {
+          // Spring SseEmitter splits multi-line data into separate data: lines.
+          // We must re-insert newlines between consecutive data: lines, otherwise
+          // markdown like "## Header\n\nParagraph" becomes "## HeaderParagraph"
+          // and the parser sees no structure.
+          if (prevWasData) report.value += '\n'
           report.value += line.substring(5)
+          prevWasData = true
+          continue
         }
+        prevWasData = false
         if (line.startsWith('event:done')) {
           reportLoading.value = false
           return
@@ -121,5 +147,19 @@ async function fetchReport() {
 .pct-bar { display: flex; align-items: center; gap: 8px; }
 .pct-fill { height: 8px; background: #409eff; border-radius: 4px; min-width: 2px; }
 .report-card { margin-top: 20px; }
-.report-content { white-space: pre-wrap; line-height: 1.8; color: #606266; }
+.report-placeholder { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 24px 0; color: #909399; font-size: 14px; }
+.report-content { line-height: 1.8; color: #303133; }
+.report-content :deep(h2) { font-size: 18px; margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 1px solid #ebeef5; }
+.report-content :deep(h3) { font-size: 16px; margin: 14px 0 6px; }
+.report-content :deep(strong) { color: #303133; }
+.report-content :deep(ul), .report-content :deep(ol) { padding-left: 20px; margin: 8px 0; }
+.report-content :deep(li) { margin-bottom: 4px; }
+.report-content :deep(table) { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+.report-content :deep(th) { background: #f5f7fa; text-align: left; padding: 8px 12px; border: 1px solid #ebeef5; font-weight: 600; }
+.report-content :deep(td) { padding: 8px 12px; border: 1px solid #ebeef5; }
+.report-content :deep(tr:nth-child(even)) { background: #fafafa; }
+.report-content :deep(blockquote) { margin: 12px 0; padding: 8px 16px; border-left: 4px solid #409eff; background: #ecf5ff; color: #606266; border-radius: 0 4px 4px 0; }
+.report-content :deep(hr) { border: none; border-top: 1px solid #ebeef5; margin: 16px 0; }
+.report-content :deep(code) { background: #f5f7fa; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+.report-content :deep(p) { margin: 8px 0; }
 </style>

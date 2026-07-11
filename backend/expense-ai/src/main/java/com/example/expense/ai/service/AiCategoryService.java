@@ -22,9 +22,18 @@ public class AiCategoryService {
 
     private final CategoryService categoryService;
     private final LlmClient llmClient;
+    private final AiCacheService cacheService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public CategorizeResponse categorize(CategorizeRequest request, Long userId) {
+        // 0. Check cache first
+        String cached = cacheService.getCategorize(userId, request.getDescription(), request.getType());
+        if (cached != null) {
+            try {
+                return objectMapper.readValue(cached, CategorizeResponse.class);
+            } catch (Exception ignored) { /* cache parse failed, fall through */ }
+        }
+
         // 1. Get all categories for this user by type
         List<Category> categories = categoryService.listByUser(userId, request.getType());
 
@@ -60,7 +69,13 @@ public class AiCategoryService {
 
         try {
             String response = llmClient.chat(systemPrompt, userMessage);
-            return parseResponse(response, categories);
+            CategorizeResponse result = parseResponse(response, categories);
+            // Cache the successful result
+            try {
+                cacheService.putCategorize(userId, request.getDescription(), request.getType(),
+                        objectMapper.writeValueAsString(result));
+            } catch (Exception ignored) { /* cache write failed, non-blocking */ }
+            return result;
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

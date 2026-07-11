@@ -69,9 +69,20 @@ public class AiReportService {
 
         String systemPrompt = """
                 You are a professional financial analyst. Write a concise monthly financial report
-                in Chinese (200-400 characters). Include: overall assessment, income vs expense analysis,
-                category breakdown observations, comparison with previous month (if data provided),
-                and 1-2 practical financial improvement suggestions. Be encouraging and constructive.""";
+                in Chinese (300-500 characters). Format your response in Markdown with the following structure:
+                ## 总体评估
+                (1 paragraph summary)
+                ## 收支对比
+                | 指标 | 上月 | 本月 | 环比 |
+                |------|------|------|------|
+                (fill the table with actual data)
+                ## 分类观察
+                (bullet points for each major category with emoji)
+                ## 理财建议
+                1. (numbered suggestion)
+                2. (numbered suggestion)
+                > (encouraging quote at the end)
+                Be encouraging and constructive. Use accurate numbers from the provided data.""";
 
         String currentData = formatStats(current);
         String userMessage;

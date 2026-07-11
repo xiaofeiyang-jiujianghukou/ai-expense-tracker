@@ -30,3 +30,4 @@ Thumbs.db
 # Env
 .env.local
 .env.*.local
+.playwright-mcp/

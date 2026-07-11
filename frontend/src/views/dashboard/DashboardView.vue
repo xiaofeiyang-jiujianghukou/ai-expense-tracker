@@ -7,16 +7,23 @@
         <el-card class="card balance"><div class="label">本月结余</div><div class="value">¥{{ stats.balance }}</div></el-card>
       </div>
 
-      <el-card class="insights" v-if="insights.length">
+      <el-card class="insights">
         <template #header>
           <div class="card-header">
             <span>AI 消费洞察</span>
             <el-button type="primary" size="small" :loading="insightLoading" @click="refreshInsights">重新生成</el-button>
           </div>
         </template>
-        <ul>
-          <li v-for="(item, i) in insights" :key="i">{{ item }}</li>
-        </ul>
+        <div v-if="insights.length || typingHint" class="insight-list">
+          <ul>
+            <li v-for="(item, i) in insights" :key="i">{{ item }}</li>
+            <li v-if="typingHint" class="typing-line">{{ typingHint }}</li>
+          </ul>
+        </div>
+        <div v-else class="insight-placeholder">
+          <el-icon class="is-loading" :size="24"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M512 64a32 32 0 0 1 32 32v192a32 32 0 0 1-64 0V96a32 32 0 0 1 32-32zm0 640a32 32 0 0 1 32 32v192a32 32 0 0 1-64 0V736a32 32 0 0 1 32-32zm448-192a32 32 0 0 1-32 32H736a32 32 0 0 1 0-64h192a32 32 0 0 1 32 32zm-640 0a32 32 0 0 1-32 32H96a32 32 0 0 1 0-64h192a32 32 0 0 1 32 32z"/></svg></el-icon>
+          <span>{{ insightLoading || insightsLoading ? 'AI 正在分析您的消费数据…' : '点击「重新生成」获取 AI 消费洞察' }}</span>
+        </div>
       </el-card>
 
       <el-card class="recent">
@@ -58,6 +65,8 @@ const recentBills = ref<BillVO[]>([])
 const stats = ref({ income: 0, expense: 0, balance: 0 })
 const insights = ref<string[]>([])
 const insightLoading = ref(false)
+const insightsLoading = ref(true)  // initial page-load loading state
+const typingHint = ref('')         // in-progress last line during streaming
 
 onMounted(async () => {
   const now = new Date()
@@ -79,15 +88,18 @@ onMounted(async () => {
 })
 
 async function loadInsights(year: number, month: number) {
+  insightsLoading.value = true
   try {
     const res = await getAnalysis({ year, month })
     insights.value = res.data.insights
   } catch { /* AI failed, non-blocking */ }
+  finally { insightsLoading.value = false }
 }
 
 async function refreshInsights() {
   insightLoading.value = true
   insights.value = []
+  typingHint.value = ''
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth() + 1
@@ -101,26 +113,48 @@ async function refreshInsights() {
     const reader = resp.body?.getReader()
     if (!reader) throw new Error('No body')
     const decoder = new TextDecoder()
-    let buffer = ''
+    let sseBuffer = ''
+    let textAcc = ''  // accumulated raw insight text
+    let prevWasData = false
     while (true) {
       const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-      for (const line of lines) {
-        if (line.startsWith('event:line') || line.startsWith('event:chunk')) continue
-        if (line.startsWith('data:')) {
-          const text = line.substring(5)
-          if (text) {
-            text.split('\n').filter(l => l.trim()).forEach(l => insights.value.push(l.trim()))
+      if (done) {
+        const final = textAcc.trim()
+        if (final) insights.value.push(final)
+        textAcc = ''
+        break
+      }
+      sseBuffer += decoder.decode(value, { stream: true })
+      const lines = sseBuffer.split('\n')
+      sseBuffer = lines.pop() || ''
+      for (const rawLine of lines) {
+        if (rawLine.startsWith('event:line') || rawLine.startsWith('event:chunk')) { prevWasData = false; continue }
+        if (rawLine.startsWith('data:')) {
+          if (prevWasData) textAcc += '\n'
+          textAcc += rawLine.substring(5)
+          prevWasData = true
+          const parts = textAcc.split('\n')
+          textAcc = parts.pop() || ''
+          for (const p of parts) {
+            const trimmed = p.trim()
+            if (trimmed) insights.value.push(trimmed)
           }
+          typingHint.value = textAcc.trim()
+          continue
         }
-        if (line.startsWith('event:done')) { return }
+        prevWasData = false
+        if (rawLine.startsWith('event:done')) {
+          const final = textAcc.trim()
+          if (final) insights.value.push(final)
+          textAcc = ''
+          typingHint.value = ''
+          insightLoading.value = false
+          return
+        }
       }
     }
   } catch { /* AI failed, non-blocking */ }
-  finally { insightLoading.value = false }
+  finally { insightLoading.value = false; typingHint.value = '' }
 }
 </script>
 
@@ -138,4 +172,6 @@ async function refreshInsights() {
 .insights { margin-bottom: 16px; }
 .insights ul { margin: 0; padding-left: 20px; }
 .insights li { margin-bottom: 6px; color: #606266; line-height: 1.6; }
+.insight-placeholder { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 24px 0; color: #909399; font-size: 14px; }
+.typing-line { color: #409eff; }
 </style>
