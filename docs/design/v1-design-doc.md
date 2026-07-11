@@ -458,6 +458,13 @@ jwt:
 
 #### 步骤 2：API 模拟测试
 
+**前置规则：调用任何 API 前，必须先查 DTO 确认字段名。**
+
+- 登录接口的字段名是 `email` 不是 `username`，是 `password` 不是 `pwd`
+- 请求体字段名 = Java DTO 的 `private` 字段名（Lombok `@Data` 生成的 getter/setter 名），不是数据库列名也不是直觉猜测
+- 不确定时直接 `grep "class XxxRequest"` 定位 DTO，读源码确认字段名
+- **禁止不查 DTO 直接盲测** — 字段名猜错的探索成本完全可避免
+
 用 PowerShell/curl 逐一调用本次新增/变更的 API。**验收报告必须用以下格式逐项填写实测值：**
 
 ```
