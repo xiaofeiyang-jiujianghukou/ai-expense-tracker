@@ -484,6 +484,8 @@ jwt:
 
 **允许纯 API 模拟测试，但仅限不涉及前端 UI 的后端接口。涉及前端交互的必须走浏览器实测。**
 
+**API 回归范围仅限本版本新增/修改的接口及其直接影响方**，不搞全量回归。例如本次只新增了 trend/daily 接口、修改了 BillType 枚举，则回归范围 = trend + daily + categories/list + statistics/monthly + ai/categorize（受枚举变更影响）。用户/账单等未改动的模块无需重测。
+
 #### 步骤 3：浏览器验收测试（前端必测）
 
 **必须用真实浏览器（或 Playwright MCP）逐项操作，每项填实测结果：**
@@ -673,6 +675,8 @@ jwt:
 | 遇到问题就退缩放弃 | 技术债务累积，问题不解决会反复出现 | 追根究底，查文档/源码/仓库，解决为止；降级需审批 |
 | 编译输出有乱码不修 | 掩盖真实错误信息，浪费排查时间 | 强制 UTF-8 编码，发现乱码立即修复 |
 | 用 curl 测代理就宣称联调完成 | 遗漏 timeout/前端超时/UI 不响应等真实用户路径的 BUG | 必须用浏览器逐一操作每个新功能，打开 DevTools 确认零错误 |
+| 魔法值（"INCOME"/"EXPENSE"）散落各处 | 拼写错误难发现、类型不安全、重构灾难 | 定义枚举（BillType），枚举自带关联数据（默认分类），Service 接受枚举，Controller 边界做 String↔Enum 转换 |
+| 命名与 Java/Spring 生态冲突 | `Transaction` 容易与 DB 事务(`@Transactional`)、银行交易混淆；`TransactionType` 歧义更大 | 项目专用名词避开 Java/Spring 通用关键字：账单用 `Bill`/`BillType`/`billDate`，不用 `Transaction`/`TransactionType`/`transactionDate`；命名前先想会不会有歧义 |
 | API 模拟标成浏览器测试 | 实测列造假，人工验收看到假数据 | 方式列严格标注"API模拟"或"浏览器"，不做假 |
 | 实测列只写"通过" | 无具体数据无法判断是否达标 | 必须填具体数值（耗时 ms、字节数、chunk 数、状态码等） |
 

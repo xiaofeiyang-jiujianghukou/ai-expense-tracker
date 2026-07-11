@@ -16,7 +16,7 @@ public class BillVO {
     private BigDecimal amount;
     private String type;
     private String description;
-    private LocalDate transactionDate;
+    private LocalDate billDate;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
 }

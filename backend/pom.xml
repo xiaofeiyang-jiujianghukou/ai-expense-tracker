@@ -26,6 +26,7 @@
         <module>expense-bill</module>
         <module>expense-statistics</module>
         <module>expense-ai</module>
+        <module>expense-budget</module>
         <module>expense-server</module>
     </modules>
 
@@ -147,6 +148,11 @@
             <dependency>
                 <groupId>com.example</groupId>
                 <artifactId>expense-ai</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>expense-budget</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

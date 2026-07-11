@@ -35,3 +35,11 @@ export function getAnalysis(data: AnalysisRequest) {
 export function getReport(data: { year: number; month: number }) {
   return request.post<any, { data: { year: number; month: number; report: string } }>('/ai/report', data)
 }
+
+export function getBudgetAdvice(data: AnalysisRequest) {
+  return request.post<any, { data: AnalysisResponse }>('/ai/budget-advice', data)
+}
+
+export function getAnomaly(data: AnalysisRequest) {
+  return request.post<any, { data: AnalysisResponse }>('/ai/anomaly', data)
+}

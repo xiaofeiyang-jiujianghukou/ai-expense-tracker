@@ -15,18 +15,7 @@
 
       <el-card v-if="stats.categoryBreakdown?.length" class="breakdown">
         <template #header><span>支出分类占比</span></template>
-        <el-table :data="stats.categoryBreakdown" stripe size="small">
-          <el-table-column prop="categoryName" label="分类" />
-          <el-table-column prop="amount" label="金额" align="right" />
-          <el-table-column label="占比" width="180">
-            <template #default="{ row }">
-              <div class="pct-bar">
-                <div class="pct-fill" :style="{ width: row.percentage + '%' }"></div>
-                <span>{{ row.percentage }}%</span>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
+        <PieChart :data="stats.categoryBreakdown" />
       </el-card>
 
       <el-card class="report-card">
@@ -44,6 +33,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
 import AppLayout from '../../components/AppLayout.vue'
+import PieChart from '../../components/charts/PieChart.vue'
 import { getMonthlyStats } from '../../api/statistics'
 import { getReport } from '../../api/ai'
 import { getToken } from '../../utils/auth'
@@ -144,8 +134,6 @@ async function fetchReport() {
 .card.income .value { color: #67c23a; }
 .card.expense .value { color: #f56c6c; }
 .card.balance .value { color: #409eff; }
-.pct-bar { display: flex; align-items: center; gap: 8px; }
-.pct-fill { height: 8px; background: #409eff; border-radius: 4px; min-width: 2px; }
 .report-card { margin-top: 20px; }
 .report-placeholder { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 24px 0; color: #909399; font-size: 14px; }
 .report-content { line-height: 1.8; color: #303133; }

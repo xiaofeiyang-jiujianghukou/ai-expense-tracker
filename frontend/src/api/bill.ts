@@ -7,7 +7,7 @@ export interface BillVO {
   amount: number
   type: string
   description: string
-  transactionDate: string
+  billDate: string
   createdTime: string
 }
 
@@ -33,14 +33,14 @@ export function listBills(params: BillListRequest) {
 
 export function createBill(data: {
   categoryId: number; amount: number; type: string
-  description?: string; transactionDate: string
+  description?: string; billDate: string
 }) {
   return request.post('/bills', data)
 }
 
 export function updateBill(data: {
   id: number; categoryId: number; amount: number; type: string
-  description?: string; transactionDate: string
+  description?: string; billDate: string
 }) {
   return request.post('/bills/update', data)
 }

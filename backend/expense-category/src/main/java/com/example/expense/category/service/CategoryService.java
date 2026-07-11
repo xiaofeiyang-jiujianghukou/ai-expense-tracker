@@ -5,21 +5,16 @@ import com.example.expense.category.dto.CategoryRequest;
 import com.example.expense.category.entity.Category;
 import com.example.expense.category.mapper.CategoryMapper;
 import com.example.expense.common.exception.BusinessException;
+import com.example.expense.common.enums.BillType;
 import com.example.expense.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
-
-    private static final Map<String, List<String>> DEFAULT_CATEGORIES = Map.of(
-            "INCOME", List.of("工资", "奖金", "投资"),
-            "EXPENSE", List.of("餐饮", "交通", "购物", "娱乐", "住房")
-    );
 
     private final CategoryMapper categoryMapper;
 
@@ -31,11 +26,11 @@ public class CategoryService {
         categoryMapper.insert(category);
     }
 
-    public List<Category> listByUser(Long userId, String type) {
+    public List<Category> listByUser(Long userId, BillType type) {
         LambdaQueryWrapper<Category> wrapper = new LambdaQueryWrapper<Category>()
                 .eq(Category::getUserId, userId);
-        if (type != null && !type.isBlank()) {
-            wrapper.eq(Category::getType, type);
+        if (type != null) {
+            wrapper.eq(Category::getType, type.name());
         }
         wrapper.orderByAsc(Category::getCreatedTime);
         return categoryMapper.selectList(wrapper);
@@ -68,14 +63,14 @@ public class CategoryService {
     }
 
     public void initDefaultCategories(Long userId) {
-        DEFAULT_CATEGORIES.forEach((type, names) -> {
-            for (String name : names) {
+        for (BillType type : BillType.values()) {
+            for (String name : type.getDefaultCategories()) {
                 Category category = new Category();
                 category.setUserId(userId);
                 category.setName(name);
-                category.setType(type);
+                category.setType(type.name());
                 categoryMapper.insert(category);
             }
-        });
+        }
     }
 }

@@ -21,6 +21,12 @@
         <el-menu-item index="/statistics">
           <span>月度统计</span>
         </el-menu-item>
+        <el-menu-item index="/trends">
+          <span>趋势分析</span>
+        </el-menu-item>
+        <el-menu-item index="/budget">
+          <span>预算管理</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

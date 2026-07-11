@@ -32,7 +32,7 @@ public class BillService {
         bill.setAmount(request.getAmount());
         bill.setType(request.getType());
         bill.setDescription(request.getDescription());
-        bill.setTransactionDate(request.getTransactionDate());
+        bill.setBillDate(request.getBillDate());
         billMapper.insert(bill);
     }
 
@@ -42,7 +42,7 @@ public class BillService {
         bill.setAmount(request.getAmount());
         bill.setType(request.getType());
         bill.setDescription(request.getDescription());
-        bill.setTransactionDate(request.getTransactionDate());
+        bill.setBillDate(request.getBillDate());
         billMapper.updateById(bill);
     }
 
@@ -60,9 +60,9 @@ public class BillService {
                 .eq(Bill::getUserId, userId);
         if (type != null && !type.isBlank()) wrapper.eq(Bill::getType, type);
         if (categoryId != null) wrapper.eq(Bill::getCategoryId, categoryId);
-        if (startDate != null) wrapper.ge(Bill::getTransactionDate, startDate);
-        if (endDate != null) wrapper.le(Bill::getTransactionDate, endDate);
-        wrapper.orderByDesc(Bill::getTransactionDate)
+        if (startDate != null) wrapper.ge(Bill::getBillDate, startDate);
+        if (endDate != null) wrapper.le(Bill::getBillDate, endDate);
+        wrapper.orderByDesc(Bill::getBillDate)
                .orderByDesc(Bill::getCreatedTime);
 
         Page<Bill> billPage = billMapper.selectPage(Page.of(page, size), wrapper);
@@ -105,7 +105,7 @@ public class BillService {
         return BillVO.builder()
                 .id(bill.getId()).categoryId(bill.getCategoryId()).categoryName(categoryName)
                 .amount(bill.getAmount()).type(bill.getType()).description(bill.getDescription())
-                .transactionDate(bill.getTransactionDate())
+                .billDate(bill.getBillDate())
                 .createdTime(bill.getCreatedTime()).updatedTime(bill.getUpdatedTime())
                 .build();
     }

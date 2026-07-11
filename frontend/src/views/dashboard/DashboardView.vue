@@ -34,7 +34,7 @@
           </div>
         </template>
         <el-table :data="recentBills" stripe size="small" v-loading="loading">
-          <el-table-column prop="transactionDate" label="日期" width="110" />
+          <el-table-column prop="billDate" label="日期" width="110" />
           <el-table-column prop="categoryName" label="分类" width="100" />
           <el-table-column prop="description" label="描述" min-width="140" show-overflow-tooltip />
           <el-table-column label="金额" width="120" align="right">

@@ -24,5 +24,5 @@ public class BillRequest {
     private String description;
 
     @NotNull(message = "交易日期不能为空")
-    private LocalDate transactionDate;
+    private LocalDate billDate;
 }

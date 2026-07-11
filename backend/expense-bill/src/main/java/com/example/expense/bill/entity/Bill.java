@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("transaction")
+@TableName("bill")
 public class Bill {
 
     @TableId(type = IdType.AUTO)
@@ -20,7 +20,7 @@ public class Bill {
     private BigDecimal amount;
     private String type;       // INCOME / EXPENSE
     private String description;
-    private LocalDate transactionDate;
+    private LocalDate billDate;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
 }

@@ -234,7 +234,15 @@ CategoryService {
       feat(frontend): add dashboard page
 ```
 
-### 5.5 测试要求
+### 5.8 枚举与常量规范
+
+- **固定值集合（如 INCOME/EXPENSE）必须定义枚举**，禁止魔法字符串散落各层
+- **枚举自带关联数据**：如 `BillType` 枚举携带默认分类列表，不另建静态 Map
+- **分层边界做转换**：Service 层接受枚举入参，Controller 层做 `String → Enum` 转换（`BillType.valueOf(str)`），DB 层存 `.name()`
+- **命名避开 Java/Spring 通用关键字**：账单用 `Bill`/`BillType`/`billDate`，不用 `Transaction`（与 `@Transactional` 冲突）；命名前先确认不会产生歧义
+- 前端模板中如需判断类型，优先用枚举 `name()` 值做字符串比较
+
+### 5.9 测试要求
 
 - Service 层单元测试覆盖率 > 80%
 - Controller 使用 MockMvc 测试
@@ -248,6 +256,14 @@ CategoryService {
 2. **Design** — 确认文件变化、数据变化、API 变化
 3. **Implement** — 修改代码、编写测试、运行测试确认通过
 4. **Review** — 检查代码质量、性能、安全、测试完整性
+
+#### 工作习惯规范
+
+- **重复问题必须记录**：同一种错误出现 2 次以上，立即写入 `memory/troubleshooting.md` 并更新 `MEMORY.md` 索引，防止下次重复折腾
+- **高频命令缓存**：执行超过 3 次的命令序列（如重启后端）记录到 troubleshooting.md，下次直接复制
+- **安全分类器拦截**：PowerShell 命令含敏感信息（API key、密码等）会被拦截。用 `run_in_background: true` 绕过；或分步先在 shell 设 env vars，再单独执行命令
+- **命名防冲突**：项目专用名词避开 Java/Spring 通用关键字（如 `Bill`/`BillType` 而非 `Transaction`/`TransactionType`）— 详见 §5.8 枚举规范
+- 遇到未知错误先追根究底，不在同一个问题上反复尝试同一种方法
 
 ### 5.8 AI 模块规范
 

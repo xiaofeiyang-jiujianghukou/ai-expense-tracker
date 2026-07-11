@@ -18,7 +18,7 @@
       </div>
 
       <el-table :data="list" stripe v-loading="loading" style="width:100%">
-        <el-table-column prop="transactionDate" label="日期" width="110" />
+        <el-table-column prop="billDate" label="日期" width="110" />
         <el-table-column prop="categoryName" label="分类" width="100" />
         <el-table-column prop="description" label="描述" min-width="150" show-overflow-tooltip />
         <el-table-column label="金额" width="130" align="right">
@@ -59,8 +59,8 @@
           <el-form-item label="金额" prop="amount">
             <el-input-number v-model="form.amount" :min="0.01" :precision="2" style="width:100%" />
           </el-form-item>
-          <el-form-item label="日期" prop="transactionDate">
-            <el-date-picker v-model="form.transactionDate" type="date" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width:100%" />
+          <el-form-item label="日期" prop="billDate">
+            <el-date-picker v-model="form.billDate" type="date" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width:100%" />
           </el-form-item>
           <el-form-item label="备注">
             <el-input v-model="form.description" placeholder="选填" />
@@ -95,12 +95,12 @@ const aiSuggesting = ref(false)
 const aiSuggestion = ref<CategorizeResponse | null>(null)
 
 const filters = reactive({ type: '', categoryId: null as number | null, dateRange: null as [string, string] | null, page: 1, size: 10 })
-const form = reactive({ type: 'EXPENSE', categoryId: null as number | null, amount: 0, transactionDate: '', description: '' })
+const form = reactive({ type: 'EXPENSE', categoryId: null as number | null, amount: 0, billDate: '', description: '' })
 const rules = {
   type: [{ required: true, message: '请选择类型' }],
   categoryId: [{ required: true, message: '请选择分类' }],
   amount: [{ required: true, message: '请输入金额' }],
-  transactionDate: [{ required: true, message: '请选择日期' }]
+  billDate: [{ required: true, message: '请选择日期' }]
 }
 
 const filteredCategories = computed(() => categories.value.filter(c => c.type === form.type))
@@ -156,10 +156,10 @@ function openDialog(row?: BillVO) {
   editingId.value = row?.id ?? null
   if (row) {
     form.type = row.type; form.categoryId = row.categoryId; form.amount = row.amount
-    form.transactionDate = row.transactionDate; form.description = row.description || ''
+    form.billDate = row.billDate; form.description = row.description || ''
   } else {
     form.type = 'EXPENSE'; form.categoryId = null; form.amount = 0
-    form.transactionDate = ''; form.description = ''
+    form.billDate = ''; form.description = ''
   }
   dialogVisible.value = true
 }

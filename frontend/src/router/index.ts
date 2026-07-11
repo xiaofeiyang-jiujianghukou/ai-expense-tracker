@@ -35,6 +35,16 @@ const router = createRouter({
       component: () => import('../views/statistics/MonthlyStats.vue')
     },
     {
+      path: '/trends',
+      name: 'trends',
+      component: () => import('../views/trends/TrendAnalysis.vue')
+    },
+    {
+      path: '/budget',
+      name: 'budget',
+      component: () => import('../views/budget/BudgetManage.vue')
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/login'
     }

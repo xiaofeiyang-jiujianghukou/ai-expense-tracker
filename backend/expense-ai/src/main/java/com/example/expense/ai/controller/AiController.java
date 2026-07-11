@@ -8,11 +8,12 @@ import com.example.expense.ai.dto.ReportResponse;
 import com.example.expense.ai.service.AiAnalysisService;
 import com.example.expense.ai.service.AiCategoryService;
 import com.example.expense.ai.service.AiReportService;
+import com.example.expense.ai.service.BudgetAdviceService;
 import com.example.expense.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
+import com.example.expense.common.util.SecurityUtil;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -27,26 +28,24 @@ public class AiController {
     private final AiCategoryService aiCategoryService;
     private final AiAnalysisService aiAnalysisService;
     private final AiReportService aiReportService;
+    private final BudgetAdviceService budgetAdviceService;
     private final Executor ttlExecutor;
 
     @PostMapping("/categorize")
-    public ApiResponse<CategorizeResponse> categorize(@Valid @RequestBody CategorizeRequest request,
-                                                       Authentication auth) {
-        Long userId = (Long) auth.getPrincipal();
+    public ApiResponse<CategorizeResponse> categorize(@Valid @RequestBody CategorizeRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.success(aiCategoryService.categorize(request, userId));
     }
 
     @PostMapping("/analysis")
-    public ApiResponse<AnalysisResponse> analysis(@Valid @RequestBody AnalysisRequest request,
-                                                   Authentication auth) {
-        Long userId = (Long) auth.getPrincipal();
+    public ApiResponse<AnalysisResponse> analysis(@Valid @RequestBody AnalysisRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.success(aiAnalysisService.analyze(request, userId));
     }
 
     @PostMapping("/report")
-    public ApiResponse<ReportResponse> report(@Valid @RequestBody AnalysisRequest request,
-                                               Authentication auth) {
-        Long userId = (Long) auth.getPrincipal();
+    public ApiResponse<ReportResponse> report(@Valid @RequestBody AnalysisRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
         String report = aiReportService.generateReport(request.getYear(), request.getMonth(), userId);
         return ApiResponse.success(ReportResponse.builder()
                 .year(request.getYear())
@@ -56,9 +55,8 @@ public class AiController {
     }
 
     @PostMapping(value = "/analysis/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter analysisStream(@Valid @RequestBody AnalysisRequest request,
-                                      Authentication auth) {
-        Long userId = (Long) auth.getPrincipal();
+    public SseEmitter analysisStream(@Valid @RequestBody AnalysisRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
         SseEmitter emitter = new SseEmitter(120_000L);
         ttlExecutor.execute(() -> {
             try {
@@ -81,9 +79,8 @@ public class AiController {
     }
 
     @PostMapping(value = "/report/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter reportStream(@Valid @RequestBody AnalysisRequest request,
-                                    Authentication auth) {
-        Long userId = (Long) auth.getPrincipal();
+    public SseEmitter reportStream(@Valid @RequestBody AnalysisRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
         SseEmitter emitter = new SseEmitter(120_000L);
         ttlExecutor.execute(() -> {
             try {
@@ -103,5 +100,17 @@ public class AiController {
             }
         });
         return emitter;
+    }
+
+    @PostMapping("/budget-advice")
+    public ApiResponse<AnalysisResponse> budgetAdvice(@Valid @RequestBody AnalysisRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.success(budgetAdviceService.generate(request, userId));
+    }
+
+    @PostMapping("/anomaly")
+    public ApiResponse<AnalysisResponse> anomaly(@Valid @RequestBody AnalysisRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.success(aiAnalysisService.detectAnomaly(request, userId));
     }
 }

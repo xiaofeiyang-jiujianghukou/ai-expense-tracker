@@ -43,6 +43,10 @@
             <groupId>com.example</groupId>
             <artifactId>expense-ai</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>expense-budget</artifactId>
+        </dependency>
 
         <!-- Spring Boot -->
         <dependency>

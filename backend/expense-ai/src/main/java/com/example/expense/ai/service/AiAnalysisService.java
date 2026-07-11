@@ -7,6 +7,7 @@ import com.example.expense.common.exception.BusinessException;
 import com.example.expense.common.exception.ErrorCode;
 import com.example.expense.statistics.manager.StatisticsManager;
 import com.example.expense.statistics.dto.MonthlyStatsVO;
+import com.example.expense.statistics.dto.TrendVO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -109,6 +110,45 @@ public class AiAnalysisService {
         });
         // Cache the full result as serialized insights
         cacheService.putAnalysis(userId, year, month, serializeInsights(parseInsights(full.toString())));
+    }
+
+    public AnalysisResponse detectAnomaly(AnalysisRequest request, Long userId) {
+        int year = request.getYear();
+        int month = request.getMonth();
+
+        MonthlyStatsVO current = statisticsManager.getMonthlyStats(userId, year, month);
+        String currentText = current.getCategoryBreakdown().stream()
+                .map(c -> String.format("%s: ¥%s", c.getCategoryName(), c.getAmount().toPlainString()))
+                .collect(java.util.stream.Collectors.joining(", "));
+
+        // Get previous month for comparison
+        int prevYear = month == 1 ? year - 1 : year;
+        int prevMonth = month == 1 ? 12 : month - 1;
+        String prevText = "";
+        try {
+            MonthlyStatsVO previous = statisticsManager.getMonthlyStats(userId, prevYear, prevMonth);
+            prevText = previous.getCategoryBreakdown().stream()
+                    .map(c -> String.format("%s: ¥%s", c.getCategoryName(), c.getAmount().toPlainString()))
+                    .collect(java.util.stream.Collectors.joining(", "));
+        } catch (Exception ignored) { /* no previous data */ }
+
+        String systemPrompt = """
+                You are a financial anomaly detector. Compare current month spending
+                with previous month (if available). Flag categories with unusual spikes
+                (>50% increase) or unexpected drops. Be specific with numbers.
+                If everything looks normal, say so. Respond with numbered observations.""";
+        String userMessage = String.format("""
+                Current month (%d/%d): %s
+                Previous month: %s""",
+                year, month, currentText,
+                prevText.isEmpty() ? "No data" : prevText);
+
+        try {
+            String response = llmClient.chat(systemPrompt, userMessage);
+            return buildResponse(year, month, parseInsights(response));
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.AI_ANALYSIS_FAILED);
+        }
     }
 
     private AnalysisResponse buildResponse(int year, int month, List<String> insights) {

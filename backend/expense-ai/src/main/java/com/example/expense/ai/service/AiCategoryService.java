@@ -5,6 +5,7 @@ import com.example.expense.ai.dto.CategorizeRequest;
 import com.example.expense.ai.dto.CategorizeResponse;
 import com.example.expense.category.entity.Category;
 import com.example.expense.category.service.CategoryService;
+import com.example.expense.common.enums.BillType;
 import com.example.expense.common.exception.BusinessException;
 import com.example.expense.common.exception.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,7 +36,8 @@ public class AiCategoryService {
         }
 
         // 1. Get all categories for this user by type
-        List<Category> categories = categoryService.listByUser(userId, request.getType());
+        BillType txnType = BillType.valueOf(request.getType());
+        List<Category> categories = categoryService.listByUser(userId, txnType);
 
         if (categories.isEmpty()) {
             throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
@@ -50,12 +52,12 @@ public class AiCategoryService {
         // 3. Build prompts
         String systemPrompt = """
                 You are a personal finance assistant. Your job is to categorize expenses and income.
-                Given a transaction description, amount, and type, pick the most appropriate category
+                Given a bill description, amount, and type, pick the most appropriate category
                 from the user's existing categories. Respond ONLY with a JSON object, no other text.""";
         String userMessage = String.format("""
                 User's categories: [%s]
 
-                Transaction description: "%s"
+                Bill description: "%s"
                 Amount: %s
                 Type: %s
 

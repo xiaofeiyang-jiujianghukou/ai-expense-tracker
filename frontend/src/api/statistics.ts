@@ -17,3 +17,31 @@ export interface MonthlyStatsVO {
 export function getMonthlyStats(year: number, month: number) {
   return request.post<any, { data: MonthlyStatsVO }>('/statistics/monthly', { year, month })
 }
+
+export interface TrendVO {
+  points: Array<{
+    year: number
+    month: number
+    income: number
+    expense: number
+    balance: number
+  }>
+}
+
+export function getTrend(months: number = 6) {
+  return request.post<any, { data: TrendVO }>('/statistics/trend', { months })
+}
+
+export interface DailyVO {
+  year: number
+  month: number
+  days: Array<{
+    day: number
+    income: number
+    expense: number
+  }>
+}
+
+export function getDaily(year: number, month: number) {
+  return request.post<any, { data: DailyVO }>('/statistics/daily', { year, month })
+}
