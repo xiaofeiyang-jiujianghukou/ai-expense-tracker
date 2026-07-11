@@ -7,6 +7,9 @@ import com.example.expense.bill.service.BillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import com.example.expense.common.util.SecurityUtil;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,8 +34,20 @@ public class BillController {
                 request.getPage(), request.getSize()));
     }
 
+    @PostMapping("/export-csv")
+    public ResponseEntity<byte[]> exportCsv(@RequestBody BillListRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        byte[] csvBytes = billService.exportCsv(userId, request.getType(),
+                request.getCategoryId(), request.getStartDate(), request.getEndDate());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+        headers.setContentDispositionFormData("attachment", "bills.csv");
+        return ResponseEntity.ok().headers(headers).body(csvBytes);
+    }
+
     @GetMapping("/{id}")
-    public ApiResponse<BillVO> getById(@PathVariable Long id ) {
+    public ApiResponse<BillVO> getById(@PathVariable Long id) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.success(billService.getById(id, userId));
     }

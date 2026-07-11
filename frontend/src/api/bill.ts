@@ -48,3 +48,7 @@ export function updateBill(data: {
 export function deleteBill(id: number) {
   return request.post('/bills/delete', { id })
 }
+
+export function exportBillsCsv(params: BillListRequest) {
+  return request.post('/bills/export-csv', params, { responseType: 'blob' })
+}

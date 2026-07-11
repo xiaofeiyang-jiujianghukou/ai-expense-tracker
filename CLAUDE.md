@@ -64,7 +64,10 @@
 | 架构设计 | [docs/architecture-design.md](docs/architecture-design.md) | 唯一架构真相来源（含前端架构+多模块设计） |
 | 开发计划 | [docs/development-plan.md](docs/development-plan.md) | Sprint 级别任务分解 |
 | 迭代日志 | [docs/iteration-log.md](docs/iteration-log.md) | 需求/架构变更追踪 |
-| V1 设计稿 | [docs/design/v1-design-doc.md](docs/design/v1-design-doc.md) | V1.0 设计目标、效果、思路、规范 |
+| 开发规范 | [docs/development-standards.md](docs/development-standards.md) | 架构原则 + 编码规范 + 流程规范 + 文档规范 + 反模式（持续演进） |
+| V1 设计稿 | [docs/design/v1-design-doc.md](docs/design/v1-design-doc.md) | V1.0 设计目标、效果、思路（已验收，冻结） |
+| V2 设计稿 | [docs/design/v2-design-doc.md](docs/design/v2-design-doc.md) | V2.0 AI 模块设计（已验收，冻结） |
+| V3 设计稿 | [docs/design/v3-design-doc.md](docs/design/v3-design-doc.md) | V3.0 可视化/预算/导出设计（已验收，冻结） |
 
 ---
 
@@ -133,12 +136,40 @@ ai-expense-tracker/
 
 | 层 | 职责 | 禁止 |
 |----|------|------|
-| **Controller** | 参数接收、JSR-303 校验、调用 Service/Manager、返回结果 | 写任何业务逻辑 |
+| **Controller** | 参数接收、JSR-303 校验、调用 Service/Manager、返回结果 | **严禁任何业务逻辑**（包括但不限于：文件生成/拼接、数据转换、算法计算、第三方库调用如 EasyExcel/POI） |
 | **Manager** | 编排多个 Service、处理复合业务、事务控制（需要时才加） | 单 Service 透传、直接访问 Mapper |
 | **Service** | 单一原子业务、模块专属逻辑 | — |
 | **Mapper** | 数据访问（MyBatis-Plus BaseMapper） | 写业务逻辑 |
 | **Entity** | 数据模型定义 | 写逻辑代码 |
 | **DTO** | 接口数据传输对象（Request/Response/VO） | — |
+
+**Controller 反例（严禁）：**
+
+```java
+// ❌ Controller 中写业务逻辑 — 严重违规
+@PostMapping("/export-excel")
+public ResponseEntity<byte[]> exportExcel(@RequestBody Request req) {
+    // 这些全部是业务逻辑，必须在 Manager/Service 中实现：
+    MonthlyStatsVO stats = manager.getMonthlyStats(...);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    EasyExcel.write(out).sheet("...").head(...).doWrite(...);  // ← 第三方库调用
+    // ...
+}
+```
+
+```java
+// ✅ Controller 只做委托
+@PostMapping("/export-excel")
+public ResponseEntity<byte[]> exportExcel(@RequestBody Request req) {
+    Long userId = SecurityUtil.getCurrentUserId();
+    byte[] bytes = statisticsManager.exportExcel(userId, req.getYear(), req.getMonth());
+    // 只做 HTTP 层面的包装（Content-Type、Content-Disposition header）
+    return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType("..."))
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=...")
+            .body(bytes);
+}
+```
 
 **Manager 命名**: `{Domain}Manager`，表明编排的业务领域（如 `UserManager` 编排注册流程，调 UserService + CategoryService + JwtTokenProvider）。
 
@@ -192,7 +223,7 @@ CategoryService {
 
 ### 5.4 数据库建表规范
 
-> 详见 [v1-design-doc.md §4.8](docs/design/v1-design-doc.md)
+> 详见 [development-standards.md §2.5](docs/development-standards.md)
 
 - **表和字段必须加 COMMENT**，不允许无注释建表
 - 索引命名：`uk_xxx`（唯一）、`idx_xxx`（普通）
@@ -200,17 +231,17 @@ CategoryService {
 
 ### 5.5 配置管理规范
 
-> 详见 [v1-design-doc.md §4.9](docs/design/v1-design-doc.md)
+> 详见 [development-standards.md §2.6](docs/development-standards.md)
 
 - **敏感信息（数据库密码等）走环境变量，无默认值**
 - 项目级配置（库名、JWT 秘钥）可硬编码
 - `${VAR}` 无默认值 = 强制设置；`${VAR:default}` = 可选
-- **环境变量命名分两类**：全局共享（`DB_HOST`、`LLM_API_KEY` 等）和项目专属（`EXPENSE_` 前缀，如 `EXPENSE_DB_PASSWORD`）。详见 [v1-design-doc.md §4.9](docs/design/v1-design-doc.md)
+- **环境变量命名分两类**：全局共享（`DB_HOST`、`LLM_API_KEY` 等）和项目专属（`EXPENSE_` 前缀，如 `EXPENSE_DB_PASSWORD`）。详见 [development-standards.md §2.6](docs/development-standards.md)
 - **设置前先检查是否存在同名变量**：同名同值不覆盖，同名异值用项目前缀新建
 
 ### 5.6 验收与联调规范
 
-> 详见 [v1-design-doc.md §4.10 验收流程规范 + §4.11 联调测试规范](docs/design/v1-design-doc.md)
+> 详见 [development-standards.md §3.4-3.5](docs/development-standards.md)
 
 - **验收流程不可跳过**：编译 → API 模拟测试 → 浏览器验收 → 增量回归 → 人工验收
 - 测试方式必须如实标注：PowerShell/curl =「API模拟」、浏览器 =「浏览器」、不可混淆
@@ -275,7 +306,7 @@ CategoryService {
 
 ### 5.9 文档同步规范
 
-> 详见 [v1-design-doc.md §4.11](docs/design/v1-design-doc.md)
+> 详见 [development-standards.md §4.1](docs/development-standards.md)
 
 - **每次完成一个大的 Plan/Phase 后必须同步更新所有相关文档**，不能只改代码不改文档
 - **项目结构变更（模块改名、新增/删除模块、目录调整）必须同步更新以下所有文件中的引用**：
@@ -286,6 +317,15 @@ CategoryService {
   - `docs/development-plan.md` — 所有涉及该模块名称的地方
 - `docs/development-plan.md` 中各 Sprint 的状态标记必须与实际情况一致
 - 文档一致性检查清单：改模块名 → `grep` 全局搜索旧名称 → 逐文件替换 → 确认无遗漏
+
+### 5.10 文件导出规范
+
+> 详见 [development-standards.md §2.7](docs/development-standards.md)
+
+- **Excel 导出优先使用 EasyExcel**，禁止直接使用 Apache POI（代码量 5-10 倍、易 OOM）
+- **输出必须美化**：表头深蓝背景白字粗体 + 全单元格细线边框 + 内容自动换行 + 列宽自适应（带呼吸间距，最小宽度 14-16 字符）
+- **多 Sheet 使用单一 `ExcelWriter`** + 多个 `WriteSheet` + `finish()`，严禁对同一 OutputStream 多次调用 `EasyExcel.write()`（会写入两个 ZIP，文件损坏）
+- **CSV 必须写入 UTF-8 BOM**，否则 Excel 打开中文乱码
 
 ### 重要规则
 

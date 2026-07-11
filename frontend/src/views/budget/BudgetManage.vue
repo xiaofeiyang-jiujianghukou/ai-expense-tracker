@@ -116,20 +116,13 @@ async function fetchAiAdvice() {
   try {
     const [y, m] = selectedMonth.value.split('-')
     const res = await getBudgetAdvice({ year: Number(y), month: Number(m) })
-    const insights = res.data.insights || []
+    const items = res.data.items || []
     let applied = 0
-    for (const line of insights) {
-      // Handle markdown like "**餐饮: ¥95**" or plain "餐饮: ¥95"
-      const stripped = line.replace(/\*\*/g, '').replace(/[*_]/g, '').trim()
-      const match = stripped.match(/(.+?)[：:]\s*¥?(\d+)/)
-      if (match) {
-        const catName = match[1].trim()
-        const amount = Number(match[2])
-        const cat = expenseCategories.value.find(c => c.name === catName)
-        if (cat) {
-          await setBudget({ categoryId: cat.id, year: Number(y), month: Number(m), targetAmount: amount })
-          applied++
-        }
+    for (const item of items) {
+      const cat = expenseCategories.value.find(c => c.name === item.categoryName)
+      if (cat) {
+        await setBudget({ categoryId: cat.id, year: Number(y), month: Number(m), targetAmount: item.amount })
+        applied++
       }
     }
     fetchBudgets()

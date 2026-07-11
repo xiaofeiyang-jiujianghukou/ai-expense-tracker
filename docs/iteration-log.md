@@ -241,6 +241,46 @@
 
 ---
 
+### #014 — 2026-07-12 | V3.0 收官：导出打磨 + Excel 美化 + 文档架构重组
+
+**类型**: 修复 + 优化 + 文档重构
+
+**内容**:
+
+**数据导出打磨**：
+- **修复 Excel 文件损坏**：两次 `EasyExcel.write()` 写同一 OutputStream → 改用单一 `ExcelWriter` + 多 `WriteSheet` + `finish()`
+- **Excel 美化输出**：深蓝表头白字粗体 + 全单元格细线边框 + 内容自动换行 + CJK 感知自适应列宽带呼吸间距（`PaddedColumnWidth` 继承 `AbstractColumnWidthStyleStrategy`）
+- **EasyExcel 4.0.3 API 确认**：通过 `javap` 反编译确认方法签名，修正 `WriteCellData<?>` vs `CellData` 类型错误
+- **PDF 弹窗优化**：删除自动 `window.print()`，改为弹窗内「打印 / 保存 PDF」按钮 + 操作提示，打印时按钮自动隐藏
+
+**其他修复**：
+- **Excel commons-compress 版本冲突**：TestContainers 1.24.0 ← 父 POM dependencyManagement 强制 1.25.0
+- **troubleshooting.md**：新增 §0 JDK 21 编译 + commons-compress 冲突
+
+**文档架构重组**：
+- **v1-design-doc.md 拆分**：§4 全部规范 + §5 反模式 → 独立 `docs/development-standards.md`
+- **新增 `docs/design/v2-design-doc.md`** 和 **`docs/design/v3-design-doc.md`**（各自冻结 + 外联引用）
+- **v1-design-doc.md 瘦身**：779 行 → 254 行，保留 V1 专属内容，末尾外联 V2/V3 改动
+- **development-standards.md 排序**：架构原则 → 编码规范 → 流程规范 → 文档规范 → 反模式
+- **新增 §4.2 设计文档版本化管理规范**：版本文档验收后冻结、新版改动只加外联、不修改旧版正文
+- **CLAUDE.md**：全部章节引用同步为新编号 + 新增 v2/v3 设计稿索引
+
+**规范新增**：
+- §2.7 文件导出规范（EasyExcel 优先 + 美化强制 + CSV BOM）
+- §4.2 设计文档版本化管理规范
+
+**文档版本**:
+- development-standards.md: 新建（架构原则 + 15 节规范 + 反模式）
+- v1-design-doc.md: V1 专属，验收冻结
+- v2-design-doc.md: 新建，V2 专属
+- v3-design-doc.md: 新建，V3 专属
+- development-plan.md: V3.0 Sprint 13-16 全部完成
+- iteration-log.md: 追加
+- troubleshooting.md: 新增 §0 JDK 21 + commons-compress
+- CLAUDE.md: 同步更新
+
+---
+
 ### #013 — 2026-07-11 | V3.0 Sprint 1-2: 趋势分析 + ECharts + 预算模块 + SecurityUtil 重构
 
 **类型**: 实现 + 重构
@@ -292,7 +332,10 @@
 
 | 文档 | 当前版本 | 最后更新 | 变更次数 |
 |------|----------|----------|----------|
-| project-requirements.md | 1.3 | 2026-07-11 | 4 |
-| architecture-design.md | 2.2 | 2026-07-11 | 4 |
-| development-plan.md | 2.0 | 2026-07-11 | 2 |
-| v1-design-doc.md | 1.5 | 2026-07-11 | 5 |
+| project-requirements.md | 1.4 | 2026-07-11 | 4 |
+| architecture-design.md | 2.3 | 2026-07-11 | 4 |
+| development-plan.md | 3.0 | 2026-07-12 | 3 |
+| development-standards.md | 1.0 | 2026-07-12 | 新建 |
+| v1-design-doc.md | 2.0 | 2026-07-12 | 拆分冻结 |
+| v2-design-doc.md | 1.0 | 2026-07-12 | 新建 |
+| v3-design-doc.md | 1.0 | 2026-07-12 | 新建 |

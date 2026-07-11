@@ -36,8 +36,19 @@ export function getReport(data: { year: number; month: number }) {
   return request.post<any, { data: { year: number; month: number; report: string } }>('/ai/report', data)
 }
 
+export interface BudgetAdviceItem {
+  categoryName: string
+  amount: number
+}
+
+export interface BudgetAdviceResponse {
+  year: number
+  month: number
+  items: BudgetAdviceItem[]
+}
+
 export function getBudgetAdvice(data: AnalysisRequest) {
-  return request.post<any, { data: AnalysisResponse }>('/ai/budget-advice', data)
+  return request.post<any, { data: BudgetAdviceResponse }>('/ai/budget-advice', data)
 }
 
 export function getAnomaly(data: AnalysisRequest) {

@@ -45,3 +45,7 @@ export interface DailyVO {
 export function getDaily(year: number, month: number) {
   return request.post<any, { data: DailyVO }>('/statistics/daily', { year, month })
 }
+
+export function exportExcel(year: number, month: number) {
+  return request.post('/statistics/export-excel', { year, month }, { responseType: 'blob' })
+}

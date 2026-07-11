@@ -18,6 +18,10 @@ request.interceptors.request.use(config => {
 request.interceptors.response.use(
   response => {
     const data = response.data
+    // Skip JSON code check for blob responses (file downloads)
+    if (response.config.responseType === 'blob') {
+      return data
+    }
     if (data.code !== 200) {
       ElMessage.error(data.message || '请求失败')
       return Promise.reject(new Error(data.message))

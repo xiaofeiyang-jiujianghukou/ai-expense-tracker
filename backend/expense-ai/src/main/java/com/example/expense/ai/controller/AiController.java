@@ -2,6 +2,7 @@ package com.example.expense.ai.controller;
 
 import com.example.expense.ai.dto.AnalysisRequest;
 import com.example.expense.ai.dto.AnalysisResponse;
+import com.example.expense.ai.dto.BudgetAdviceResponse;
 import com.example.expense.ai.dto.CategorizeRequest;
 import com.example.expense.ai.dto.CategorizeResponse;
 import com.example.expense.ai.dto.ReportResponse;
@@ -103,7 +104,7 @@ public class AiController {
     }
 
     @PostMapping("/budget-advice")
-    public ApiResponse<AnalysisResponse> budgetAdvice(@Valid @RequestBody AnalysisRequest request) {
+    public ApiResponse<BudgetAdviceResponse> budgetAdvice(@Valid @RequestBody AnalysisRequest request) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ApiResponse.success(budgetAdviceService.generate(request, userId));
     }

@@ -3,6 +3,7 @@
     <div class="txn-page">
       <div class="toolbar">
         <el-button type="primary" @click="openDialog()">新增账单</el-button>
+        <el-button @click="exportCsv">导出 CSV</el-button>
         <div class="filters">
           <el-select v-model="filters.type" placeholder="类型" clearable style="width:100px">
             <el-option label="收入" value="INCOME" /><el-option label="支出" value="EXPENSE" />
@@ -79,7 +80,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppLayout from '../../components/AppLayout.vue'
-import { listBills, createBill, updateBill, deleteBill, type BillVO } from '../../api/bill'
+import { listBills, createBill, updateBill, deleteBill, exportBillsCsv, type BillVO } from '../../api/bill'
 import { listCategories, type CategoryVO } from '../../api/category'
 import { categorize, type CategorizeResponse } from '../../api/ai'
 
@@ -187,6 +188,22 @@ async function handleDelete(id: number) {
   await deleteBill(id)
   ElMessage.success('删除成功')
   fetchList()
+}
+
+async function exportCsv() {
+  try {
+    const blob = await exportBillsCsv({
+      type: filters.type || undefined,
+      categoryId: filters.categoryId ?? undefined,
+      startDate: filters.dateRange?.[0],
+      endDate: filters.dateRange?.[1]
+    })
+    const url = URL.createObjectURL(blob as Blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'bills.csv'; a.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success('CSV 导出成功')
+  } catch { ElMessage.warning('导出失败') }
 }
 </script>
 

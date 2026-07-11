@@ -305,3 +305,88 @@
 | T1204 | 文档同步（requirements / architecture / development-plan / README / CLAUDE.md） | — |
 
 **产出物**: 统计页一键生成 AI 财务报告
+
+---
+
+## V3.0：可视化增强 + AI 预算 + 数据导出
+
+### Sprint 13：可视化升级 + 趋势分析
+
+**状态**: ✅ 已完成
+
+**目标**: ECharts 图表替换 + 趋势 API + 枚举标准化
+
+| 任务 | 描述 | 状态 |
+|------|------|------|
+| T1301 | Trend API（N 月收支趋势） | ✅ |
+| T1302 | Daily API（31 天日分布） | ✅ |
+| T1303 | ECharts 三组件（折线/饼图/柱图）集成 | ✅ |
+| T1304 | TrendAnalysis 页面 + 统计页饼图改造 | ✅ |
+| T1305 | BillType 枚举（替代 INCOME/EXPENSE 魔法值） | ✅ |
+| T1306 | transaction→bill 全量重命名（Entity/字段/前端/文档） | ✅ |
+
+**产出物**: 趋势分析页 + ECharts 可视化 + 枚举标准化
+
+### Sprint 14：预算模块 + AI 预算建议
+
+**状态**: ✅ 已完成
+
+**目标**: 预算 CRUD + AI 智能预算建议 + 异常检测
+
+| 任务 | 描述 | 状态 |
+|------|------|------|
+| T1401 | expense-budget 模块（JPA Entity + Mapper + V6 Flyway） | ✅ |
+| T1402 | Budget CRUD API（增删改查 + 按月查询） | ✅ |
+| T1403 | BudgetAdviceService（近3月分类统计 + 趋势推算 + LLM 结构化 JSON） | ✅ |
+| T1404 | AI 异常检测（/api/ai/anomaly：超预算预警） | ✅ |
+| T1405 | 前端 BudgetManage.vue（预算列表 + AI 建议弹窗） | ✅ |
+| T1406 | SecurityUtil 统一获取用户ID（全部 Controller 重构） | ✅ |
+
+**产出物**: 预算管理页 + AI 预算建议 + 异常检测
+
+### Sprint 15：数据导出
+
+**状态**: ✅ 已完成（浏览器验收通过）
+
+**目标**: CSV / Excel / PDF 三格式数据导出
+
+| 任务 | 描述 | 状态 |
+|------|------|------|
+| T1501 | CSV 导出（POST /api/bills/export-csv → BillService） | ✅ |
+| T1502 | Excel 导出（POST /api/statistics/export-excel → EasyExcel） | ✅ |
+| T1503 | PDF 导出（客户端 window.print() 方案） | ✅ |
+| T1504 | EasyExcel 4.0.3 依赖 + commons-compress 版本冲突修复 | ✅ |
+| T1505 | 前端导出按钮 + blob 下载适配（request.ts responseType） | ✅ |
+| T1506 | 浏览器验收：CSV 中文不乱码 / Excel 双 Sheet / PDF 排版 | ✅ |
+
+**产出物**: 三格式导出，浏览器验收全部通过
+
+### Sprint 16：文档收尾
+
+**状态**: ✅ 已完成
+
+**目标**: V3.0 全量文档同步
+
+| 任务 | 描述 | 状态 |
+|------|------|------|
+| T1601 | development-plan.md 新增 V3.0 Sprint 13-16 | ✅ |
+| T1602 | iteration-log.md 追加 #014 | ✅ |
+| T1603 | CLAUDE.md 同步更新 | ✅ |
+| T1604 | troubleshooting.md 新增 JDK 21 编译 + commons-compress 冲突 | ✅ |
+| T1605 | memory 文件状态同步 | ✅ |
+
+**产出物**: 全部文档与代码同步
+
+---
+
+## 工时汇总（更新）
+
+| Sprint | 内容 | 状态 |
+|--------|------|------|
+| Sprint 0-9 | V1.0 MVP + V2.0 AI 模块 | ✅ |
+| Sprint 10-12 | AI 基础设施 + 自动分类 + 财务报告 | ✅ |
+| Sprint 13 | 可视化升级 + 趋势分析 | ✅ |
+| Sprint 14 | 预算模块 + AI 预算建议 | ✅ |
+| Sprint 15 | 数据导出（CSV/Excel/PDF） | ✅ |
+| Sprint 16 | 文档收尾 | ✅ |
+| **总计** | **V3.0 全部完成** | ✅ |

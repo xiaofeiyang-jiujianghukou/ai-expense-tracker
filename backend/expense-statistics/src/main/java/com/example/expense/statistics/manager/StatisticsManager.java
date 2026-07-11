@@ -1,5 +1,21 @@
 package com.example.expense.statistics.manager;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.metadata.Head;
+import com.alibaba.excel.metadata.data.WriteCellData;
+import com.alibaba.excel.write.metadata.WriteSheet;
+import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;
+import com.alibaba.excel.write.metadata.style.WriteCellStyle;
+import com.alibaba.excel.write.metadata.style.WriteFont;
+import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
+import com.alibaba.excel.write.style.column.AbstractColumnWidthStyleStrategy;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import com.example.expense.category.service.CategoryService;
 import com.example.expense.common.exception.BusinessException;
 import com.example.expense.statistics.dto.MonthlyStatsVO;
@@ -12,6 +28,7 @@ import com.example.expense.common.enums.BillType;
 import com.example.expense.statistics.dto.DailyVO;
 import com.example.expense.statistics.dto.TrendVO;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -111,6 +128,118 @@ public class StatisticsManager {
         }
 
         return TrendVO.builder().points(points).build();
+    }
+
+    /**
+     * Generate monthly statistics Excel file with professional formatting.
+     */
+    public byte[] exportExcel(Long userId, int year, int month) {
+        MonthlyStatsVO stats = getMonthlyStats(userId, year, month);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        // Single ExcelWriter for all sheets
+        ExcelWriter excelWriter = EasyExcel.write(out).build();
+
+        // Sheet 1: Summary
+        WriteSheet summarySheet = EasyExcel.writerSheet(0, "月度汇总")
+                .head(List.of(List.of("年份"), List.of("月份"), List.of("收入 (¥)"), List.of("支出 (¥)"), List.of("结余 (¥)")))
+                .registerWriteHandler(new PaddedColumnWidth(16, 38, 4))
+                .registerWriteHandler(buildStyleStrategy())
+                .build();
+        excelWriter.write(List.of(List.of(
+                String.valueOf(stats.getYear()), String.valueOf(stats.getMonth()),
+                fmt(stats.getIncome()), fmt(stats.getExpense()), fmt(stats.getBalance()))), summarySheet);
+
+        // Sheet 2: Category breakdown
+        List<List<String>> detailRows = new ArrayList<>();
+        for (MonthlyStatsVO.CategorySummary c : stats.getCategoryBreakdown()) {
+            detailRows.add(List.of(c.getCategoryName(), fmt(c.getAmount()), c.getPercentage() + "%"));
+        }
+        WriteSheet detailSheet = EasyExcel.writerSheet(1, "分类明细")
+                .head(List.of(List.of("分类"), List.of("金额 (¥)"), List.of("占比")))
+                .registerWriteHandler(new PaddedColumnWidth(14, 38, 4))
+                .registerWriteHandler(buildStyleStrategy())
+                .build();
+        excelWriter.write(detailRows, detailSheet);
+
+        excelWriter.finish();
+        return out.toByteArray();
+    }
+
+    /** Professional header + bordered content style. */
+    private HorizontalCellStyleStrategy buildStyleStrategy() {
+        // -- Head: white bold on dark blue, centered --
+        WriteCellStyle head = new WriteCellStyle();
+        head.setFillPatternType(FillPatternType.SOLID_FOREGROUND);
+        head.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+        WriteFont headFont = new WriteFont();
+        headFont.setBold(true);
+        headFont.setFontHeightInPoints((short) 12);
+        headFont.setColor(IndexedColors.WHITE.getIndex());
+        headFont.setFontName("Microsoft YaHei");
+        head.setWriteFont(headFont);
+        head.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        head.setVerticalAlignment(VerticalAlignment.CENTER);
+        setBorder(head, BorderStyle.THIN);
+
+        // -- Content: centered, wrapped, thin borders --
+        WriteCellStyle content = new WriteCellStyle();
+        content.setWrapped(true);
+        content.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        content.setVerticalAlignment(VerticalAlignment.CENTER);
+        WriteFont contentFont = new WriteFont();
+        contentFont.setFontHeightInPoints((short) 11);
+        contentFont.setFontName("Microsoft YaHei");
+        content.setWriteFont(contentFont);
+        setBorder(content, BorderStyle.THIN);
+
+        return new HorizontalCellStyleStrategy(head, content);
+    }
+
+    private void setBorder(WriteCellStyle style, BorderStyle bs) {
+        style.setBorderLeft(bs);
+        style.setBorderRight(bs);
+        style.setBorderTop(bs);
+        style.setBorderBottom(bs);
+    }
+
+    /**
+     * Column-width strategy that auto-fits with padding, a minimum, and a cap.
+     * CJK characters are counted as ~2 units for better accuracy.
+     */
+    private static class PaddedColumnWidth extends AbstractColumnWidthStyleStrategy {
+        private static final int UNIT = 280; // approximate pixel-width per char
+        private final int minChars;
+        private final int maxChars;
+        private final int padChars;
+        private final Map<Integer, Integer> colMax = new HashMap<>();
+
+        PaddedColumnWidth(int minChars, int maxChars, int padChars) {
+            this.minChars = minChars;
+            this.maxChars = maxChars;
+            this.padChars = padChars;
+        }
+
+        @Override
+        protected void setColumnWidth(WriteSheetHolder holder, List<WriteCellData<?>> list,
+                                       Cell cell, Head head, Integer idx, Boolean isHead) {
+            int ci = cell.getColumnIndex();
+            int len = 0;
+            String s = cell.getStringCellValue();
+            if (s != null) {
+                for (char c : s.toCharArray()) { len += (c > 127) ? 2 : 1; }
+            }
+            int target = Math.max(minChars, Math.min(maxChars, len + padChars));
+            Integer prev = colMax.get(ci);
+            if (prev == null || target > prev) {
+                colMax.put(ci, target);
+                holder.getSheet().setColumnWidth(ci, target * UNIT);
+            }
+        }
+    }
+
+    private String fmt(BigDecimal v) {
+        return v != null ? v.setScale(2).toPlainString() : "0.00";
     }
 
     public DailyVO getDailyDistribution(Long userId, int year, int month) {

@@ -2,7 +2,8 @@ package com.example.expense.ai.service;
 
 import com.example.expense.ai.client.LlmClient;
 import com.example.expense.ai.dto.AnalysisRequest;
-import com.example.expense.ai.dto.AnalysisResponse;
+import com.example.expense.ai.dto.BudgetAdviceItem;
+import com.example.expense.ai.dto.BudgetAdviceResponse;
 import com.example.expense.bill.entity.Bill;
 import com.example.expense.category.entity.Category;
 import com.example.expense.category.service.CategoryService;
@@ -10,6 +11,8 @@ import com.example.expense.common.enums.BillType;
 import com.example.expense.common.exception.BusinessException;
 import com.example.expense.common.exception.ErrorCode;
 import com.example.expense.statistics.service.StatisticsService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,8 +32,9 @@ public class BudgetAdviceService {
     private final StatisticsService statisticsService;
     private final CategoryService categoryService;
     private final LlmClient llmClient;
+    private final ObjectMapper objectMapper;
 
-    public AnalysisResponse generate(AnalysisRequest request, Long userId) {
+    public BudgetAdviceResponse generate(AnalysisRequest request, Long userId) {
         int year = request.getYear();
         int month = request.getMonth();
 
@@ -44,20 +48,19 @@ public class BudgetAdviceService {
         LocalDate threeMonthsAgo = today.minusMonths(3).withDayOfMonth(1);
         List<Bill> allBills = statisticsService.queryByDateRange(userId, threeMonthsAgo, today);
 
-        // Filter to expense only
         List<Bill> expenseBills = allBills.stream()
                 .filter(b -> BillType.EXPENSE.name().equals(b.getType()))
                 .toList();
 
         // 3. Build per-category monthly data
-        Map<Long, Map<String, BigDecimal>> catMonthlyData = new LinkedHashMap<>(); // catId -> {"2026-5": sum}
+        Map<Long, Map<String, BigDecimal>> catMonthlyData = new LinkedHashMap<>();
         for (Bill b : expenseBills) {
             String key = b.getBillDate().getYear() + "-" + b.getBillDate().getMonthValue();
             catMonthlyData.computeIfAbsent(b.getCategoryId(), k -> new LinkedHashMap<>())
                     .merge(key, b.getAmount(), BigDecimal::add);
         }
 
-        // 4. Find first recording day in current month
+        // 4. Calculate recorded days in current month
         LocalDate monthStart = LocalDate.of(year, month, 1);
         LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
         LocalDate searchEnd = today.isBefore(monthEnd) ? today : monthEnd;
@@ -80,7 +83,6 @@ public class BudgetAdviceService {
             if (monthly.isEmpty()) continue;
             validCatCount++;
 
-            // Get last 3 months data
             List<BigDecimal> monthValues = new ArrayList<>();
             List<String> monthLabels = new ArrayList<>();
             LocalDate cursor = threeMonthsAgo;
@@ -92,14 +94,12 @@ public class BudgetAdviceService {
                 cursor = cursor.plusMonths(1);
             }
 
-            // Calculate stats
             List<BigDecimal> validValues = monthValues.stream()
                     .filter(v -> v.compareTo(BigDecimal.ZERO) > 0).toList();
             BigDecimal avg3Month = validValues.isEmpty() ? BigDecimal.ZERO
                     : validValues.stream().reduce(BigDecimal.ZERO, BigDecimal::add)
                     .divide(BigDecimal.valueOf(validValues.size()), 2, RoundingMode.HALF_UP);
 
-            // Trend: compare last 2 valid months
             String trend = "→";
             if (validValues.size() >= 2) {
                 BigDecimal latest = validValues.get(validValues.size() - 1);
@@ -108,7 +108,6 @@ public class BudgetAdviceService {
                 trend = cmp > 0 ? "↑增长" : cmp < 0 ? "↓下降" : "→持平";
             }
 
-            // Current month: daily rate and projected full month
             String currentMonthKey = year + "-" + month;
             BigDecimal currentMonthSum = monthly.getOrDefault(currentMonthKey, BigDecimal.ZERO);
             BigDecimal dailyAvg = recordedDays > 0
@@ -117,12 +116,7 @@ public class BudgetAdviceService {
             BigDecimal projectedFull = dailyAvg.multiply(BigDecimal.valueOf(daysInMonth)).setScale(0, RoundingMode.HALF_UP);
 
             context.append(String.format("""
-                    **%s**:
-                    - 近3月: %s
-                    - 近3月有效月均值: ¥%s
-                    - 趋势: %s
-                    - 本月(已记录%d天，日均¥%s，推算全月¥%s)
-
+                    %s: 近3月%s, 有效月均值¥%s, 趋势%s, 本月已记录%d天日均¥%s推算全月¥%s
                     """,
                     cat.getName(),
                     buildMonthDetail(monthLabels, monthValues),
@@ -132,40 +126,36 @@ public class BudgetAdviceService {
         }
 
         if (validCatCount == 0) {
-            return AnalysisResponse.builder().year(year).month(month)
-                    .insights(List.of("暂无足够消费数据用于预算分析，建议先记录1-2个月后再试。")).build();
+            return BudgetAdviceResponse.builder().year(year).month(month).items(List.of()).build();
         }
 
-        // 6. Build prompt
-        String systemPrompt = "你是一位专业的个人理财顾问。" +
-                "你需要根据以下数据分析每个分类的消费模式，给出合理的月度预算建议。\n\n" +
-                "数据说明：\n" +
-                "- \"有效月\"指该分类有实际消费的月份，¥0表示该月未记录消费\n" +
-                "- \"近3月有效月均值\"排除了消费为0的月份\n" +
-                "- \"本月推算全月\"根据本月实际日均支出推算，仅供参考\n" +
-                "- \"趋势\"为该分类近两个有效月的变动方向\n\n" +
-                "预算建议规则：\n" +
-                "- 优先参考近3月有效月均值，趋势上行适当上浮10-20%，趋势下行参考均值即可\n" +
-                "- 本月为推算值时降低权重，优先参考历史有效月数据\n" +
-                "- 金额取整数，注意避开250\n" +
-                "- 如果某分类仅有1个月数据或波动很大，说明原因并给出保守建议\n\n" +
-                "输出格式：分类名: ¥金额 — 理由";
+        // 6. Build prompt — ask for JSON
+        String systemPrompt = "你是一位专业的个人理财顾问。根据数据分析每个分类的消费模式，给出月度预算建议。\n\n" +
+                "规则：\n" +
+                "- 优先参考近3月有效月均值，趋势上行上浮10-20%，趋势下行参考均值\n" +
+                "- 仅1个月数据或波动很大时给出保守建议（日均×30×0.8）\n" +
+                "- 金额取整数，避开250\n\n" +
+                "【必须返回纯JSON数组，不要markdown代码块，不要其他文字】\n" +
+                "格式：[{\"categoryName\":\"分类名\",\"amount\":金额}]\n" +
+                "示例：[{\"categoryName\":\"餐饮\",\"amount\":1200},{\"categoryName\":\"交通\",\"amount\":150}]";
 
         String userMessage = String.format("""
                 用户%d年%d月预算分析数据，本月已记录%d天（共%d天）：
 
                 %s
-                请为每个有数据的分类建议合理的月度预算金额。""",
+                请返回JSON数组，每个分类一个对象。""",
                 year, month, recordedDays, daysInMonth, context.toString());
 
-        // 7. Call LLM
+        // 7. Call LLM and parse JSON
         try {
             String response = llmClient.chat(systemPrompt, userMessage);
-            return AnalysisResponse.builder()
+            List<BudgetAdviceItem> items = parseJsonResponse(response, catNames);
+            return BudgetAdviceResponse.builder()
                     .year(year).month(month)
-                    .insights(parseLines(response))
+                    .items(items)
                     .build();
         } catch (Exception e) {
+            log.error("Budget advice failed", e);
             throw new BusinessException(ErrorCode.AI_ANALYSIS_FAILED);
         }
     }
@@ -184,16 +174,23 @@ public class BudgetAdviceService {
         return sb.toString();
     }
 
-    private List<String> parseLines(String llmResponse) {
-        List<String> result = new ArrayList<>();
-        for (String line : llmResponse.split("\n")) {
-            String trimmed = line.trim();
-            trimmed = trimmed.replaceFirst("^\\d+[.、．)\\s]+", "").trim();
-            if (!trimmed.isEmpty()) {
-                result.add(trimmed);
-            }
+    private List<BudgetAdviceItem> parseJsonResponse(String llmResponse, Map<Long, String> catNames) {
+        // Extract JSON array from response (LLM may wrap in markdown or add extra text)
+        String json = llmResponse.trim();
+        int start = json.indexOf('[');
+        int end = json.lastIndexOf(']');
+        if (start >= 0 && end > start) {
+            json = json.substring(start, end + 1);
         }
-        if (result.isEmpty()) result.add(llmResponse.trim());
-        return result;
+
+        try {
+            List<BudgetAdviceItem> items = objectMapper.readValue(json,
+                    new TypeReference<List<BudgetAdviceItem>>() {});
+            log.info("Parsed {} budget advice items from LLM response", items.size());
+            return items;
+        } catch (Exception e) {
+            log.warn("Failed to parse LLM JSON response: {}", json, e);
+            return List.of();
+        }
     }
 }

@@ -12,7 +12,9 @@ import com.example.expense.bill.mapper.BillMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -82,6 +84,58 @@ public class BillService {
     public BillVO getById(Long id, Long userId) {
         Bill bill = findById(id, userId);
         return toVO(bill, getCategoryName(bill.getCategoryId()));
+    }
+
+    /**
+     * Query all bills matching filters without pagination — used for CSV export.
+     */
+    public List<BillVO> queryAll(Long userId, String type, Long categoryId,
+                                  LocalDate startDate, LocalDate endDate) {
+        LambdaQueryWrapper<Bill> wrapper = new LambdaQueryWrapper<Bill>()
+                .eq(Bill::getUserId, userId);
+        if (type != null && !type.isBlank()) wrapper.eq(Bill::getType, type);
+        if (categoryId != null) wrapper.eq(Bill::getCategoryId, categoryId);
+        if (startDate != null) wrapper.ge(Bill::getBillDate, startDate);
+        if (endDate != null) wrapper.le(Bill::getBillDate, endDate);
+        wrapper.orderByDesc(Bill::getBillDate)
+               .orderByDesc(Bill::getCreatedTime);
+
+        List<Bill> bills = billMapper.selectList(wrapper);
+
+        Map<Long, String> catNames = bills.stream()
+                .map(Bill::getCategoryId)
+                .distinct()
+                .collect(Collectors.toMap(cid -> cid, this::getCategoryName));
+
+        return bills.stream()
+                .map(b -> toVO(b, catNames.getOrDefault(b.getCategoryId(), "未知")))
+                .toList();
+    }
+
+    /**
+     * Generate CSV file content for bill export.
+     */
+    public byte[] exportCsv(Long userId, String type, Long categoryId,
+                             LocalDate startDate, LocalDate endDate) {
+        List<BillVO> bills = queryAll(userId, type, categoryId, startDate, endDate);
+        StringBuilder sb = new StringBuilder();
+        sb.append('﻿'); // BOM for Excel UTF-8 compatibility
+        sb.append("日期,类型,分类,描述,金额\n");
+        for (BillVO b : bills) {
+            sb.append(b.getBillDate()).append(',');
+            sb.append("收入".equals(b.getType()) ? "收入" : "支出").append(',');
+            sb.append(escapeCsv(b.getCategoryName())).append(',');
+            sb.append(escapeCsv(b.getDescription() != null ? b.getDescription() : "")).append(',');
+            sb.append(b.getAmount().toPlainString()).append('\n');
+        }
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private String escapeCsv(String value) {
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 
     // ── 内部 ──
